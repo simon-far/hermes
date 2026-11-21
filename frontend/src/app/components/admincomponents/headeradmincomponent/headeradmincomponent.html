@@ -1,6 +1,7 @@
+<!-- Cabecera principal del panel de administración -->
 <header class="admin-header">
 
-  <!-- LOGOTIPO -->
+  <!-- LOGOTIPO: redirige a la raíz del módulo admin -->
   <a routerLink="/admin" class="admin-brand">
 
     <div class="brand-icon">
@@ -15,9 +16,10 @@
   </a>
 
 
-  <!-- NAVEGACIÓN -->
+  <!-- NAVEGACIÓN: enlaces principales con estado activo automático -->
   <nav class="admin-navigation">
 
+    <!-- exact: true evita que 'Inicio' quede activo en las subrutas -->
     <a routerLink="/admin/principaladmin"
        routerLinkActive="active"
        [routerLinkActiveOptions]="{ exact: true }"
@@ -58,7 +60,7 @@
   </nav>
 
 
-  <!-- PERFIL -->
+  <!-- PERFIL: muestra el usuario autenticado y controla el dropdown -->
   <div class="admin-profile">
 
     <button
@@ -75,6 +77,7 @@
         <span class="profile-role">Administrador</span>
       </div>
 
+      <!-- Rota la flecha cuando el menú está abierto -->
       <i
         class="fa-solid fa-chevron-down profile-arrow"
         [class.rotated]="menuPerfilAbierto">
@@ -83,7 +86,7 @@
     </button>
 
 
-    <!-- MENÚ DESPLEGABLE -->
+    <!-- MENÚ DESPLEGABLE: visible solo cuando menuPerfilAbierto es true -->
     <div class="profile-dropdown" *ngIf="menuPerfilAbierto">
 
       <div class="dropdown-header">
@@ -102,6 +105,7 @@
 
       <div class="dropdown-divider"></div>
 
+      <!-- Dispara el cierre de sesión en el componente -->
       <button type="button" class="dropdown-item logout" (click)="cerrarSesion()">
         <i class="fa-solid fa-right-from-bracket"></i>
         Cerrar sesión

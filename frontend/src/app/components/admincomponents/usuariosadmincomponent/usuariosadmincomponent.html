@@ -1,4 +1,4 @@
-
+<!-- Cabecera de navegación del panel administrativo -->
 <app-headeradmincomponent></app-headeradmincomponent>
 
 <main class="users-page">
@@ -17,7 +17,7 @@
     </div>
   </section>
 
-  <!-- Estadísticas -->
+  <!-- Estadísticas: conteo total de cuentas registradas -->
   <section class="users-statistics">
 
     <article class="stat-card">
@@ -66,7 +66,11 @@
       </span>
     </div>
 
+<<<<<<< Updated upstream
     <!-- Búsqueda y filtros -->
+=======
+    <!-- Búsqueda en tiempo real por nombre o correo -->
+>>>>>>> Stashed changes
     <div class="users-toolbar">
 
       <div class="search-box">
@@ -111,6 +115,11 @@
 
           <td>
             <div class="user-information">
+<<<<<<< Updated upstream
+=======
+
+              <!-- Inicial del nombre de usuario como avatar -->
+>>>>>>> Stashed changes
               <div class="user-avatar">
                 {{ usuario.nombre.charAt(0) }}
               </div>
@@ -126,10 +135,20 @@
             {{ usuario.fechaRegistro }}
           </td>
 
+<<<<<<< Updated upstream
           <td>
               <span
                 class="user-status"
                 [ngClass]="usuario.estado === 'Activo' ? 'active' : 'inactive'"
+=======
+              <!-- Deshabilitado para evitar que el administrador elimine su propia cuenta -->
+              <button
+                class="delete-button"
+                type="button"
+                (click)="pedirConfirmacionEliminar(user)"
+                [disabled]="esUsuarioActual(user)"
+                [title]="esUsuarioActual(user) ? 'No puedes eliminar tu propia cuenta' : 'Eliminar usuario'"
+>>>>>>> Stashed changes
               >
                 <span class="status-dot"></span>
                 {{ usuario.estado }}
@@ -145,6 +164,7 @@
 
         </tr>
 
+        <!-- Estado vacío cuando no hay coincidencias con la búsqueda -->
         <tr *ngIf="usuariosFiltrados.length === 0">
           <td colspan="4" class="empty-state">
             <i class="fa-solid fa-user-slash"></i>
@@ -162,3 +182,132 @@
   </section>
 
 </main>
+<<<<<<< Updated upstream
+=======
+
+<!-- Modal: actualización de datos del usuario seleccionado -->
+@if (usuarioEditando(); as usuario) {
+  <div class="modal-backdrop-hermes" (click)="cerrarEdicion()">
+    <!-- stopPropagation evita cerrar el modal al hacer clic dentro de la tarjeta -->
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-editar-usuario"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal-header-hermes">
+        <div>
+          <span class="section-eyebrow">ACTUALIZAR USUARIO</span>
+          <h2 id="titulo-editar-usuario">{{ usuario.username || 'Usuario sin datos' }}</h2>
+        </div>
+        <button type="button" class="close-button" aria-label="Cerrar" (click)="cerrarEdicion()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Formulario template-driven con validaciones locales -->
+      <form #formEditar="ngForm" (ngSubmit)="guardarCambios(formEditar)" novalidate>
+
+        <label class="form-field">
+          <span>Nombre de usuario</span>
+          <input
+            type="text"
+            name="username"
+            [(ngModel)]="formulario.username"
+            #username="ngModel"
+            required
+            maxlength="50"
+            autocomplete="off"
+          >
+          <small *ngIf="username.invalid && username.touched" class="field-error">
+            El nombre de usuario es obligatorio.
+          </small>
+        </label>
+
+        <label class="form-field">
+          <span>Correo electrónico</span>
+          <input
+            type="email"
+            name="email"
+            [(ngModel)]="formulario.email"
+            #email="ngModel"
+            required
+            email
+            autocomplete="off"
+          >
+          <small *ngIf="email.invalid && email.touched" class="field-error">
+            Escribe un correo válido.
+          </small>
+        </label>
+
+        <label class="form-field">
+          <span>Rol</span>
+          <select name="rol" [(ngModel)]="formulario.rol" required>
+            <option *ngFor="let rol of roles" [ngValue]="rol.valor">{{ rol.etiqueta }}</option>
+          </select>
+        </label>
+
+        <!-- Campo opcional: si queda vacío, conserva la contraseña actual -->
+        <label class="form-field">
+          <span>Nueva contraseña <em>(opcional)</em></span>
+          <input
+            type="password"
+            name="password"
+            [(ngModel)]="formulario.password"
+            #password="ngModel"
+            minlength="8"
+            autocomplete="new-password"
+            placeholder="Déjala vacía para conservar la actual"
+          >
+          <small *ngIf="password.invalid && password.touched" class="field-error">
+            Debe tener al menos 8 caracteres.
+          </small>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-action" (click)="cerrarEdicion()" [disabled]="guardando">
+            Cancelar
+          </button>
+          <button type="submit" class="primary-action" [disabled]="guardando">
+            {{ guardando ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Modal: confirmación de eliminación permanente -->
+@if (usuarioAEliminar(); as usuario) {
+  <div class="modal-backdrop-hermes" (click)="cancelarEliminar()">
+    <div
+      class="modal-card modal-small"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="titulo-eliminar-usuario"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="delete-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+
+      <h2 id="titulo-eliminar-usuario">¿Eliminar usuario?</h2>
+      <p class="modal-text">
+        Se eliminará <strong>{{ usuario.username || 'este usuario' }}</strong> y todo su historial de
+        traducciones. Esta acción no se puede deshacer.
+      </p>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-action" (click)="cancelarEliminar()" [disabled]="eliminando">
+          Cancelar
+        </button>
+        <button type="button" class="danger-action" (click)="confirmarEliminar()" [disabled]="eliminando">
+          {{ eliminando ? 'Eliminando…' : 'Sí, eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+>>>>>>> Stashed changes

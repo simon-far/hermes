@@ -1,3 +1,4 @@
+<!-- Vista del historial personal de traducciones del usuario -->
 <section class="historial-page">
 
   <!-- ENCABEZADO -->
@@ -24,9 +25,16 @@
   <!-- ESTADÍSTICAS -->
   <div class="estadisticas">
 
+<<<<<<< Updated upstream
     <article class="stat-card">
       <div class="stat-icon icon-total">
         <i class="fa-solid fa-file-arrow-down"></i>
+=======
+    <!-- SIN SESIÓN: solicita autenticación antes de mostrar el historial -->
+    <div class="sin-resultados">
+      <div class="sin-resultados-icon">
+        <i class="fa-solid fa-lock"></i>
+>>>>>>> Stashed changes
       </div>
 
       <div>
@@ -91,8 +99,13 @@
 
     <div class="filtros-container">
 
+<<<<<<< Updated upstream
       <div class="buscador">
         <i class="fa-solid fa-magnifying-glass"></i>
+=======
+    <!-- ESTADÍSTICAS: resumen de actividad del usuario -->
+    <div class="estadisticas">
+>>>>>>> Stashed changes
 
         <input
           type="text"
@@ -140,8 +153,13 @@
     </div>
   </section>
 
+<<<<<<< Updated upstream
   <!-- TARJETAS DE ARCHIVOS -->
   <section class="archivos-grid">
+=======
+    <!-- FILTROS: búsqueda por texto y selector de lenguaje -->
+    <section class="filtros-section">
+>>>>>>> Stashed changes
 
     <article
       class="archivo-card"
@@ -221,7 +239,12 @@
 
       </div>
 
+<<<<<<< Updated upstream
     </article>
+=======
+    <!-- Estados de carga, error, vacío o grilla de resultados -->
+    @if (cargando()) {
+>>>>>>> Stashed changes
 
   </section>
 
@@ -249,8 +272,74 @@
       Limpiar filtros
     </button>
 
+<<<<<<< Updated upstream
   </div>
+=======
+    } @else {
 
+      <!-- TARJETAS DE TRADUCCIONES -->
+      <section class="archivos-grid">
+
+        @for (traduccion of traduccionesFiltradas; track traduccion.id) {
+          <article class="archivo-card">
+
+            <!-- Ruta de conversión: lenguaje de origen → lenguaje de destino -->
+            <div class="lenguajes-ruta">
+              <span class="lenguaje-chip" [ngClass]="claseLenguaje(traduccion.lenguajeOrigen)">
+                <i [class]="iconoLenguaje(traduccion.lenguajeOrigen)"></i>
+                {{ etiquetaLenguaje(traduccion.lenguajeOrigen) }}
+              </span>
+
+              <i class="fa-solid fa-arrow-right ruta-flecha" aria-label="a"></i>
+
+              <span class="lenguaje-chip" [ngClass]="claseLenguaje(traduccion.lenguajeDestino)">
+                <i [class]="iconoLenguaje(traduccion.lenguajeDestino)"></i>
+                {{ etiquetaLenguaje(traduccion.lenguajeDestino) }}
+              </span>
+            </div>
+
+            <!-- Extracto del código traducido -->
+            <pre class="codigo-preview"><code>{{ vistaPrevia(traduccion.codigoTraducido) }}</code></pre>
+
+            <!-- Metadatos: fecha de creación y modelo de IA utilizado -->
+            <div class="archivo-detalles">
+              <span>
+                <i class="fa-regular fa-calendar"></i>
+                {{ formatearFecha(traduccion.fecha) }}
+              </span>
+
+              @if (traduccion.modelo) {
+                <span class="modelo" [title]="traduccion.modelo">
+                  <i class="fa-solid fa-microchip"></i>
+                  {{ traduccion.modelo }}
+                </span>
+              }
+            </div>
+
+            <!-- Acciones sobre el registro -->
+            <div class="archivo-card-footer">
+              <button class="btn-modificar" type="button" (click)="abrirEdicion(traduccion)">
+                <i class="fa-solid fa-pen-to-square"></i>
+                Modificar
+              </button>
+
+              <button class="btn-eliminar" type="button" (click)="pedirConfirmacionEliminar(traduccion)">
+                <i class="fa-solid fa-trash"></i>
+                Eliminar
+              </button>
+            </div>
+
+          </article>
+        }
+
+      </section>
+
+    }
+
+  }
+>>>>>>> Stashed changes
+
+  <!-- Aviso de privacidad del historial -->
   <div class="historial-footer">
     <i class="fa-solid fa-shield-halved"></i>
     Tus archivos y actividades estarán disponibles
@@ -258,3 +347,123 @@
   </div>
 
 </section>
+<<<<<<< Updated upstream
+=======
+
+<!-- VENTANA: MODIFICAR TRADUCCIÓN -->
+@if (traduccionEditando()) {
+  <div class="modal-backdrop-hermes" (click)="cerrarEdicion()">
+    <!-- stopPropagation evita cerrar el modal al hacer clic dentro de la tarjeta -->
+    <div
+      class="modal-card"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="titulo-editar-traduccion"
+      (click)="$event.stopPropagation()">
+
+      <div class="modal-header-hermes">
+        <div>
+          <span class="section-eyebrow">MODIFICAR TRADUCCIÓN</span>
+          <h2 id="titulo-editar-traduccion">
+            {{ etiquetaLenguaje(formulario.lenguajeOrigen) }} → {{ etiquetaLenguaje(formulario.lenguajeDestino) }}
+          </h2>
+        </div>
+        <button type="button" class="close-button" aria-label="Cerrar" (click)="cerrarEdicion()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Formulario template-driven para editar lenguajes y fragmentos de código -->
+      <form #formEditar="ngForm" (ngSubmit)="guardarCambios(formEditar)" novalidate>
+
+        <div class="form-row">
+          <label class="form-field">
+            <span>Lenguaje de origen</span>
+            <select name="lenguajeOrigen" [(ngModel)]="formulario.lenguajeOrigen">
+              @for (lenguaje of opcionesLenguaje(formulario.lenguajeOrigen); track lenguaje.valor) {
+                <option [ngValue]="lenguaje.valor">{{ lenguaje.etiqueta }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="form-field">
+            <span>Lenguaje de destino</span>
+            <select name="lenguajeDestino" [(ngModel)]="formulario.lenguajeDestino" required>
+              @for (lenguaje of opcionesLenguaje(formulario.lenguajeDestino); track lenguaje.valor) {
+                <option [ngValue]="lenguaje.valor">{{ lenguaje.etiqueta }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <label class="form-field">
+          <span>Código original</span>
+          <textarea
+            name="codigoOriginal"
+            rows="8"
+            spellcheck="false"
+            [(ngModel)]="formulario.codigoOriginal"
+            #codigoOriginal="ngModel"
+            required></textarea>
+          @if (codigoOriginal.invalid && codigoOriginal.touched) {
+            <small class="field-error">El código original es obligatorio.</small>
+          }
+        </label>
+
+        <label class="form-field">
+          <span>Código traducido</span>
+          <textarea
+            name="codigoTraducido"
+            rows="8"
+            spellcheck="false"
+            [(ngModel)]="formulario.codigoTraducido"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary-action" (click)="cerrarEdicion()" [disabled]="guardando">
+            Cancelar
+          </button>
+          <button type="submit" class="primary-action" [disabled]="guardando">
+            {{ guardando ? 'Guardando…' : 'Guardar cambios' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+}
+
+<!-- VENTANA: CONFIRMAR ELIMINACIÓN -->
+@if (traduccionAEliminar(); as traduccion) {
+  <div class="modal-backdrop-hermes" (click)="cancelarEliminar()">
+    <div
+      class="modal-card modal-small"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="titulo-eliminar-traduccion"
+      (click)="$event.stopPropagation()">
+
+      <div class="delete-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+
+      <h2 id="titulo-eliminar-traduccion">¿Eliminar traducción?</h2>
+      <p class="modal-text">
+        Se eliminará la traducción de
+        <strong>{{ etiquetaLenguaje(traduccion.lenguajeOrigen) }}</strong> a
+        <strong>{{ etiquetaLenguaje(traduccion.lenguajeDestino) }}</strong>
+        del {{ formatearFecha(traduccion.fecha) }}. Esta acción no se puede deshacer.
+      </p>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-action" (click)="cancelarEliminar()" [disabled]="eliminando">
+          Cancelar
+        </button>
+        <button type="button" class="danger-action" (click)="confirmarEliminar()" [disabled]="eliminando">
+          {{ eliminando ? 'Eliminando…' : 'Sí, eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+>>>>>>> Stashed changes

@@ -1,4 +1,6 @@
+/* Estilos del pie de página */
 
+/* Empuja el footer al final cuando el contenedor padre usa flex en columna */
 :host {
   display: block;
   margin-top: auto;
@@ -10,6 +12,10 @@
   border-top: 1px solid #292d40;
   color: #c6c8d8;
 }
+
+/* =========================
+   SECCIÓN PRINCIPAL Y MARCA
+========================= */
 
 .footer-main {
   display: flex;
@@ -62,6 +68,11 @@
   line-height: 1.7;
 }
 
+/* =========================
+   ENLACES DE NAVEGACIÓN
+========================= */
+
+/* Espaciado fluido entre columnas de enlaces según el ancho de pantalla */
 .footer-links {
   display: flex;
   gap: clamp(32px, 7vw, 100px);
@@ -92,12 +103,17 @@
   color: #ffffff;
 }
 
+/* Indicador visible para navegación por teclado */
 .link-group a:focus-visible,
 .brand:focus-visible {
   outline: 2px solid #a797ff;
   outline-offset: 4px;
   border-radius: 3px;
 }
+
+/* =========================
+   BARRA INFERIOR
+========================= */
 
 .footer-bottom {
   display: flex;
@@ -121,6 +137,11 @@
   white-space: nowrap;
 }
 
+/* =========================
+   RESPONSIVE
+========================= */
+
+/* Móviles: apila la marca, los bloques de enlaces y la barra inferior */
 @media (max-width: 650px) {
   .footer {
     padding: 30px 6% 18px;

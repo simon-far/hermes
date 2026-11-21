@@ -1,8 +1,11 @@
+/* Estilos del panel principal de administración */
+
 :host {
   display: block;
   min-height: 100%;
 }
 
+/* Resta los 76px del header fijo para ocupar al menos el alto completo de la pantalla */
 .admin-page {
   min-height: calc(100vh - 76px);
   padding: 42px 5% 60px;
@@ -45,6 +48,7 @@
   font-size: 13px;
 }
 
+/* Badge de estado operativo del sistema */
 .system-status {
   display: flex;
   align-items: center;
@@ -93,6 +97,7 @@
   margin-bottom: 30px;
 }
 
+/* Grilla de 4 tarjetas métricas; minmax(0, 1fr) evita desbordes por contenido largo */
 .statistics-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -137,6 +142,7 @@
   font-size: 17px;
 }
 
+/* Variantes de color reutilizables para íconos y badges */
 .purple {
   color: #ad99ff;
   background: rgba(146, 120, 255, 0.13);
@@ -187,6 +193,7 @@
    CONTENIDO PRINCIPAL
 ========================= */
 
+/* Distribución asimétrica: resumen de solicitudes (izquierda) y gráfica (derecha) */
 .dashboard-content {
   display: grid;
   grid-template-columns: minmax(280px, 0.85fr) minmax(0, 1.6fr);
@@ -238,6 +245,7 @@
   font-size: 12px;
 }
 
+/* Barra de progreso segmentada (atendidas vs. pendientes) */
 .progress-track {
   display: flex;
   width: 100%;
@@ -358,6 +366,7 @@
   gap: 13px;
 }
 
+/* Reserva 24px inferiores para alinear el eje Y con las etiquetas del eje X */
 .chart-y-axis {
   display: flex;
   flex-direction: column;
@@ -378,6 +387,7 @@
   height: 100%;
 }
 
+/* Líneas guía horizontales detrás de las barras */
 .chart-grid-lines {
   position: absolute;
   inset: 0 0 24px;
@@ -419,6 +429,7 @@
   height: calc(100% - 24px);
 }
 
+/* min-height asegura que los valores bajos sigan siendo visibles */
 .chart-bar {
   width: min(19px, 35%);
   min-height: 2px;
@@ -577,6 +588,7 @@
    RESPONSIVE
 ========================= */
 
+/* Tablets: estadísticas en 2 columnas y contenido principal apilado */
 @media (max-width: 1100px) {
 
   .statistics-grid {
@@ -589,6 +601,7 @@
 
 }
 
+/* Móviles: apila encabezado, compacta tarjetas y ajusta accesos rápidos a 1 columna */
 @media (max-width: 700px) {
 
   .admin-page {
@@ -648,6 +661,7 @@
 
 }
 
+/* Pantallas muy pequeñas: estadísticas en 1 sola columna */
 @media (max-width: 380px) {
 
   .statistics-grid {
@@ -659,3 +673,33 @@
   }
 
 }
+<<<<<<< Updated upstream
+=======
+
+/* =========================
+   ESTADOS DE CARGA
+========================= */
+
+/* Banner de error al fallar la consulta de datos del dashboard */
+.load-error {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  color: #ff8a9a;
+  font-size: 13px;
+  background: rgba(239, 111, 138, 0.10);
+  border: 1px solid rgba(239, 111, 138, 0.25);
+  border-radius: 12px;
+}
+
+/* Mensaje vacío cuando no hay registros de actividad reciente */
+.activity-empty {
+  margin: 0;
+  padding: 18px 0;
+  color: #85899e;
+  font-size: 12px;
+  text-align: center;
+}
+>>>>>>> Stashed changes

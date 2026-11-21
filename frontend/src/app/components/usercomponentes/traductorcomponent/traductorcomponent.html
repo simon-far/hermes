@@ -1,7 +1,11 @@
+<<<<<<< Updated upstream
 
+=======
+<!-- Espacio de trabajo principal para la traducción de código -->
+>>>>>>> Stashed changes
 <section class="translator-page">
 
-
+  <!-- Encabezado y descripción de la herramienta -->
   <div class="translator-heading">
     <span class="section-label">CODE TRANSLATION WORKSPACE</span>
 
@@ -14,7 +18,13 @@
   </div>
 
   <div class="translator-card">
+<<<<<<< Updated upstream
   <div class="translator-toolbar">
+=======
+
+    <!-- Barra de selección e intercambio de lenguajes -->
+    <div class="translator-toolbar">
+>>>>>>> Stashed changes
 
     <div class="language-selector">
       <label for="sourceLanguage">Lenguaje de origen</label>
@@ -34,6 +44,7 @@
 
     </div>
 
+<<<<<<< Updated upstream
     <button
       type="button"
       class="swap-button"
@@ -41,6 +52,10 @@
       aria-label="Intercambiar lenguajes">
       ⇄
     </button>
+=======
+    <!-- Paneles de edición: código original y resultado traducido -->
+    <div class="editor-grid">
+>>>>>>> Stashed changes
 
     <div class="language-selector">
       <label for="targetLanguage">Lenguaje de destino</label>
@@ -58,22 +73,48 @@
       </select>
     </div>
 
+<<<<<<< Updated upstream
   </div>
 
   <div class="editor-grid">
 
     <section class="editor-panel">
       <div class="editor-header">
+=======
+    <!-- Selector desplegable del modelo de IA -->
+    <div class="model-picker">
+      <button type="button" class="btnModelo" (click)="seleccionarModelo($event)" aria-haspopup="listbox"
+              [attr.aria-expanded]="menuModelosAbierto">
+>>>>>>> Stashed changes
         <span class="status-dot"></span>
         <h2>Código original</h2>
         <span class="language-badge">{{ lenguajeOrigen }}</span>
       </div>
 
+<<<<<<< Updated upstream
       <app-codeeditorcomponent
         [(value)]="codigoOrigen"
         [language]="lenguajeOrigen">
       </app-codeeditorcomponent>
     </section>
+=======
+      <!-- stopPropagation evita cerrar el menú al interactuar con las opciones -->
+      @if (menuModelosAbierto) {
+        <ul class="model-list" role="listbox" (click)="$event.stopPropagation()">
+          @for (modelo of modelos; track modelo.endpoint) {
+            <li role="option" [attr.aria-selected]="modelo === modeloSeleccionado"
+                [class.selected]="modelo === modeloSeleccionado" (click)="elegirModelo(modelo)">
+              <span class="model-name">{{ modelo.nombre }}</span>
+              <span class="model-desc">{{ modelo.descripcion }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+
+    <!-- Acciones principales del traductor -->
+    <div class="translator-actions">
+>>>>>>> Stashed changes
 
     <section class="editor-panel">
       <div class="editor-header">
@@ -90,7 +131,15 @@
 
   </div>
 
+<<<<<<< Updated upstream
   <div class="translator-actions">
+=======
+      <!-- Deshabilitado mientras la solicitud de traducción está en proceso -->
+      <button type="button" class="primary-button" [disabled]="cargando" (click)="traducir()">
+        {{ cargando ? 'Traduciendo…' : 'Traducir código' }}
+        <span aria-hidden="true">→</span>
+      </button>
+>>>>>>> Stashed changes
 
     <button
       type="button"
@@ -99,6 +148,7 @@
       Limpiar
     </button>
 
+<<<<<<< Updated upstream
     <button
       type="button"
       class="secondary-button"
@@ -136,4 +186,27 @@
     Revisa el resultado antes de usarlo.
   </p>
 </div>
+=======
+    <!-- Panel opcional con recomendaciones devueltas por la IA -->
+    @if (mejoras.length > 0) {
+      <section class="suggestions-panel" aria-labelledby="suggestionsTitle">
+        <div class="editor-header">
+          <span class="status-dot"></span>
+          <h2 id="suggestionsTitle">Sugerencias de la IA</h2>
+        </div>
+        <ul>
+          @for (mejora of mejoras; track $index) {
+            <li>{{ mejora }}</li>
+          }
+        </ul>
+      </section>
+    }
+
+    <!-- Aviso de revisión del resultado generado -->
+    <p class="translator-notice">
+      La traducción la realiza una IA y puede tardar unos segundos.
+      Revisa el resultado antes de usarlo.
+    </p>
+  </div>
+>>>>>>> Stashed changes
 </section>

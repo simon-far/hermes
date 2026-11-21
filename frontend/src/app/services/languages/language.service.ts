@@ -3,6 +3,7 @@ import type { Extension } from '@codemirror/state';
 import { LanguageCode } from '../../models/ai/ai.models';
 import { LanguageOption } from '../../models/languages/languages.models';
 
+<<<<<<< Updated upstream:frontend/src/app/services/languages/language.service.ts
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   readonly languages: readonly LanguageOption[] = [
@@ -27,6 +28,19 @@ export class LanguageService {
   }
 
   /** Carga bajo demanda el resaltado de sintaxis de CodeMirror para el lenguaje. */
+=======
+/**
+ * Servicio encargado de cargar dinámicamente las extensiones de resaltado
+ * de sintaxis de CodeMirror según el lenguaje de programación seleccionado.
+ */
+@Injectable({ providedIn: 'root' })
+export class LanguageService {
+  /**
+   * Importa bajo demanda la extensión de lenguaje correspondiente para CodeMirror.
+   * @param code Código del lenguaje de programación soportado.
+   * @returns Promesa con la extensión de resaltado de sintaxis lista para inyectarse en el editor.
+   */
+>>>>>>> Stashed changes:frontend/src/app/services/language.service.ts
   async loadExtension(code: LanguageCode): Promise<Extension> {
     switch (code) {
       case 'JAVA':
@@ -40,6 +54,7 @@ export class LanguageService {
       case 'CPP':
         return (await import('@codemirror/lang-cpp')).cpp();
       case 'CSHARP': {
+        // C# se carga mediante el modo heredado de tipo C adaptado con StreamLanguage
         const [{ StreamLanguage }, { csharp }] = await Promise.all([
           import('@codemirror/language'),
           import('@codemirror/legacy-modes/mode/clike'),

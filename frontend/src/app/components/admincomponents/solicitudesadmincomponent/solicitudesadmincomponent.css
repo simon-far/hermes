@@ -1,9 +1,11 @@
+/* Estilos de la vista de gestión de solicitudes */
 
 :host {
   display: block;
   min-height: 100%;
 }
 
+/* Descuenta los 76px del header para cubrir al menos el alto completo de la pantalla */
 .requests-page {
   min-height: calc(100vh - 76px);
   padding: 42px 5% 60px;
@@ -56,6 +58,7 @@
 
 /* ESTADÍSTICAS */
 
+/* Grilla de 4 tarjetas; minmax(0, 1fr) evita desbordes por textos largos */
 .requests-statistics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -90,6 +93,7 @@
   font-size: 16px;
 }
 
+/* Variantes de color para los íconos de las tarjetas métricas */
 .purple {
   color: #ad99ff;
   background: rgba(146, 120, 255, 0.13);
@@ -210,6 +214,7 @@
 
 /* TABLA */
 
+/* Permite desplazamiento horizontal cuando la tabla supera el ancho visible */
 .requests-table-container {
   width: 100%;
   overflow-x: auto;
@@ -274,6 +279,7 @@
 
 /* ESTADOS */
 
+/* Etiquetas de estado y modelo utilizado en cada solicitud */
 .request-status {
   display: inline-flex;
   align-items: center;
@@ -353,12 +359,14 @@
 
 /* RESPONSIVE */
 
+/* Tablets: estadísticas en 2 columnas */
 @media (max-width: 1100px) {
   .requests-statistics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
+/* Móviles: apila encabezados y barra de búsqueda/filtros */
 @media (max-width: 700px) {
   .requests-page {
     padding: 30px 4% 45px;
@@ -391,6 +399,7 @@
   }
 }
 
+/* Pantallas muy pequeñas: estadísticas en 1 columna */
 @media (max-width: 420px) {
   .requests-statistics {
     grid-template-columns: 1fr;

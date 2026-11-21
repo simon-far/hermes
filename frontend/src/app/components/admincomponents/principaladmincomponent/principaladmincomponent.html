@@ -1,4 +1,6 @@
+<!-- Cabecera de navegación del panel administrativo -->
 <app-headeradmincomponent></app-headeradmincomponent>
+
 <main class="admin-page">
 
   <!-- ENCABEZADO -->
@@ -21,8 +23,17 @@
 
   </section>
 
+<<<<<<< Updated upstream
+=======
+  <!-- Alerta visible cuando falla la carga de datos del dashboard -->
+  <div class="load-error" *ngIf="error()">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    {{ error() }}
+  </div>
 
-  <!-- ESTADÍSTICAS -->
+>>>>>>> Stashed changes
+
+  <!-- ESTADÍSTICAS: tarjetas con los indicadores principales -->
   <section class="statistics-section">
 
     <div class="section-title">
@@ -45,6 +56,7 @@
             <i [class]="estadistica.icono"></i>
           </div>
 
+          <!-- Variación opcional del indicador -->
           <span
             class="stat-variation"
             *ngIf="estadistica.variacion"
@@ -75,7 +87,11 @@
   <!-- RESUMEN Y GRÁFICAS -->
   <section class="dashboard-content">
 
+<<<<<<< Updated upstream
     <!-- RESUMEN DE SOLICITUDES -->
+=======
+    <!-- SOLICITUDES POR LENGUAJE: distribución proporcional en barra segmentada -->
+>>>>>>> Stashed changes
     <article class="dashboard-card requests-card">
 
       <div class="card-heading">
@@ -94,6 +110,7 @@
         <span>Solicitudes totales</span>
       </div>
 
+      <!-- Cada segmento ajusta su ancho según el porcentaje del lenguaje -->
       <div class="requests-progress">
 
         <div class="progress-track">
@@ -121,7 +138,12 @@
           <strong>{{ solicitudesAtendidas }}</strong>
         </div>
 
+<<<<<<< Updated upstream
         <div class="legend-item">
+=======
+        <!-- Estado vacío cuando no hay registros y terminó la carga -->
+        <div class="legend-item" *ngIf="!cargando() && lenguajes().length === 0">
+>>>>>>> Stashed changes
           <div class="legend-label">
             <span class="legend-dot pending"></span>
             <span>Pendientes</span>
@@ -132,7 +154,12 @@
 
       </div>
 
+<<<<<<< Updated upstream
       <div class="completion-rate">
+=======
+      <!-- Destaca el lenguaje líder (primer elemento ordenado por cantidad) -->
+      <div class="completion-rate" *ngIf="lenguajes().length">
+>>>>>>> Stashed changes
         <div>
           <span>Porcentaje de atención</span>
           <strong>
@@ -144,7 +171,7 @@
     </article>
 
 
-    <!-- GRÁFICA DE ACTIVIDAD -->
+    <!-- GRÁFICA DE ACTIVIDAD: comparativa mensual de usuarios y solicitudes -->
     <article class="dashboard-card chart-card">
 
       <div class="card-heading">
@@ -176,6 +203,7 @@
 
       <div class="chart-container">
 
+        <!-- Escala numérica del eje Y -->
         <div class="chart-y-axis">
           <span>100</span>
           <span>75</span>
@@ -186,6 +214,7 @@
 
         <div class="chart-content">
 
+          <!-- Líneas horizontales de referencia -->
           <div class="chart-grid-lines">
             <span></span>
             <span></span>
@@ -194,6 +223,7 @@
             <span></span>
           </div>
 
+          <!-- Columnas agrupadas por periodo; altura calculada dinámicamente -->
           <div class="chart-columns">
 
             <div
@@ -234,7 +264,7 @@
   </section>
 
 
-  <!-- ACTIVIDAD RECIENTE -->
+  <!-- ACTIVIDAD RECIENTE: listado cronológico de las últimas solicitudes -->
   <section class="dashboard-card activity-card">
 
     <div class="card-heading">
@@ -280,7 +310,7 @@
   </section>
 
 
-  <!-- ACCESOS RÁPIDOS -->
+  <!-- ACCESOS RÁPIDOS: tarjetas de resumen hacia los módulos administrativos -->
   <section class="quick-access-section">
 
     <div class="section-title">

@@ -21,6 +21,7 @@ export class Solicitudesadmincomponent {busqueda = '';
 
   filtroEstado: 'Todas' | EstadoSolicitud = 'Todas';
 
+<<<<<<< Updated upstream
   solicitudes: Solicitud[] = [
     {
       id: 1001,
@@ -77,6 +78,41 @@ export class Solicitudesadmincomponent {busqueda = '';
       descripcion: 'Conversión de código JavaScript a Python.'
     }
   ];
+=======
+  /** Lenguaje de destino seleccionado en el filtro. */
+  filtroLenguaje = 'Todos';
+
+  readonly solicitudes = signal<Solicitud[]>([]);
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
+
+  readonly totalMesActual = computed(
+    () => this.solicitudes().filter((s) => this.esDelMesActual(s.fecha)).length
+  );
+
+  readonly totalUsuariosConSolicitudes = computed(
+    () => new Set(this.solicitudes().map((s) => s.correo)).size
+  );
+
+  /** Lenguajes de destino presentes en las solicitudes, para el filtro. */
+  readonly lenguajesDisponibles = computed(() =>
+    [...new Set(this.solicitudes().map((s) => this.lenguajeDestino(s)))].sort((a, b) => a.localeCompare(b))
+  );
+
+  ngOnInit(): void {
+    this.estadisticasService.solicitudes().subscribe({
+      next: (respuesta) => {
+        this.solicitudes.set(Array.isArray(respuesta) ? respuesta : []);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        console.error('Error al consultar las solicitudes:', error);
+        this.error.set(this.estadisticasService.mensajeErrorCarga(error));
+        this.cargando.set(false);
+      },
+    });
+  }
+>>>>>>> Stashed changes
 
   get solicitudesFiltradas(): Solicitud[] {
     const termino = this.busqueda.trim().toLowerCase();
