@@ -8,6 +8,16 @@ export interface ActividadMensual {
   traducciones: number;
 }
 
+/** Cantidad de solicitudes de un lenguaje, ya preparada para las gráficas del panel. */
+export interface LenguajeConteo {
+  lenguaje: string;
+  cantidad: number;
+  /** Porcentaje sobre el total de solicitudes (0-100). */
+  porcentaje: number;
+  /** Color con el que se dibuja en las gráficas. */
+  color: string;
+}
+
 /** Respuesta de GET /estadisticas. */
 export interface Estadisticas {
   totalUsuarios: number;

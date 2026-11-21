@@ -7,7 +7,8 @@ import {
   LENGUAJES_HISTORIAL,
   TraduccionHistorial,
   TraduccionHistorialActualizacion,
-} from '../../../models/history/traduccionhistorial.model';
+} from '../../../models/traduccionhistorial.model';
+import { Opcion } from '../../../models/opcion.model';
 import { HistorialService } from '../../../services/historial.service';
 import { LoginService } from '../../../services/login.service';
 
@@ -180,7 +181,7 @@ export class Historialcomponent implements OnInit {
   }
 
   /** Lenguajes para el formulario, incluyendo el actual si no está en la lista. */
-  opcionesLenguaje(actual: string): { valor: string; etiqueta: string }[] {
+  opcionesLenguaje(actual: string): Opcion[] {
     if (!actual || this.lenguajes.some((l) => l.valor === actual)) {
       return this.lenguajes;
     }

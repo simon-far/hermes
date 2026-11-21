@@ -4,6 +4,7 @@ import { NgForm } from '@angular/forms';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 import { RolUsuario, User, UsuarioActualizacion } from '../../../models/usuarios.model';
+import { Opcion } from '../../../models/opcion.model';
 import { UsuarioService } from '../../../services/usuario.service';
 import { LoginService } from '../../../services/login.service';
 
@@ -26,7 +27,7 @@ export class Usuariosadmincomponent implements OnInit {
   /** Nombre del administrador con sesión iniciada (no puede eliminarse a sí mismo). */
   readonly usuarioActual = this.loginServicio.obtenerUsuario();
 
-  readonly roles: { valor: RolUsuario; etiqueta: string }[] = [
+  readonly roles: Opcion<RolUsuario>[] = [
     { valor: 'USER', etiqueta: 'Usuario' },
     { valor: 'ADMIN', etiqueta: 'Administrador' },
   ];

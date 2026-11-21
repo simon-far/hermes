@@ -1,4 +1,4 @@
-import {NgModule} from '@angular/core';
+import {inject, NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {Traductorcomponent} from './components/usercomponentes/traductorcomponent/traductorcomponent';
 import {Historialcomponent} from './components/usercomponentes/historialcomponent/historialcomponent';
@@ -8,7 +8,7 @@ import {
   Solicitudesadmincomponent
 } from './components/admincomponents/solicitudesadmincomponent/solicitudesadmincomponent';
 import {Reportesadmincomponent} from './components/admincomponents/reportesadmincomponent/reportesadmincomponent';
-import {adminGuard} from './guards/admin.guard';
+import {LoginService} from './services/login.service';
 
 const routes: Routes = [
   {
@@ -21,7 +21,8 @@ const routes: Routes = [
 
   {
     path: 'admin',
-    canActivate: [adminGuard],
+    // Solo usuarios con sesión y rol ADMIN (la lógica está en LoginService).
+    canActivate: [() => inject(LoginService).validarAccesoAdmin()],
     children: [{path: '', redirectTo: 'principaladmin', pathMatch: 'full'},
       {path: 'principaladmin', component: Principaladmincomponent},
       {path: 'usuarios', component: Usuariosadmincomponent},

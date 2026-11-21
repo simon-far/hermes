@@ -1,16 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Actividad, DatoGrafica, Estadistica } from '../../../models/admin/panel.models';
-import { Estadisticas } from '../../../models/admin/estadisticas.models';
+import { Actividad, DatoGrafica, Estadistica } from '../../../models/panel.models';
+import { Estadisticas } from '../../../models/estadisticas.models';
 import { EstadisticasService } from '../../../services/estadisticas.service';
-import {
-  etiquetaMes,
-  lenguajesOrdenados,
-  marcasEje,
-  maximoEje,
-  mensajeErrorCarga,
-  textoLenguajes,
-  tiempoRelativo,
-} from '../admin-formato';
 
 /** Divisiones del eje Y de la gráfica de actividad (5 marcas). */
 const DIVISIONES_EJE = 4;
@@ -33,7 +24,9 @@ export class Principaladmincomponent implements OnInit {
   /** Actividad del mes en curso (último elemento de la lista mensual). */
   private readonly mesActual = computed(() => this.datos()?.actividadMensual.at(-1));
 
-  readonly lenguajes = computed(() => lenguajesOrdenados(this.datos()?.traduccionesPorLenguaje));
+  readonly lenguajes = computed(() =>
+    this.estadisticasService.lenguajesOrdenados(this.datos()?.traduccionesPorLenguaje)
+  );
 
   readonly estadisticas = computed<Estadistica[]>(() => {
     const datos = this.datos();
@@ -76,7 +69,7 @@ export class Principaladmincomponent implements OnInit {
 
   readonly datosGrafica = computed<DatoGrafica[]>(() =>
     (this.datos()?.actividadMensual ?? []).map((a) => ({
-      periodo: etiquetaMes(a.periodo),
+      periodo: this.estadisticasService.etiquetaMes(a.periodo),
       usuarios: a.usuarios,
       solicitudes: a.traducciones,
     }))
@@ -84,20 +77,22 @@ export class Principaladmincomponent implements OnInit {
 
   /** Valor máximo del eje Y según los datos reales. */
   private readonly maximoGrafica = computed(() =>
-    maximoEje(
+    this.estadisticasService.maximoEje(
       this.datosGrafica().flatMap((d) => [d.usuarios, d.solicitudes]),
       DIVISIONES_EJE
     )
   );
 
-  readonly marcasGrafica = computed(() => marcasEje(this.maximoGrafica(), DIVISIONES_EJE));
+  readonly marcasGrafica = computed(() =>
+    this.estadisticasService.marcasEje(this.maximoGrafica(), DIVISIONES_EJE)
+  );
 
   /** Solo actividad de solicitudes: no hay forma de saber qué usuarios están conectados. */
   readonly actividadesRecientes = computed<Actividad[]>(() =>
     (this.datos()?.ultimasSolicitudes ?? []).map((s) => ({
-      titulo: `Nueva solicitud: ${textoLenguajes(s)}`,
+      titulo: `Nueva solicitud: ${this.estadisticasService.textoLenguajes(s)}`,
       descripcion: `Realizada por ${s.usuario}${s.modelo ? ' con el modelo ' + s.modelo : ''}.`,
-      fecha: tiempoRelativo(s.fecha),
+      fecha: this.tiempoRelativo(s.fecha),
       icono: 'fa-solid fa-inbox',
       tipo: 'blue',
     }))
@@ -111,7 +106,7 @@ export class Principaladmincomponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al consultar las estadísticas:', error);
-        this.error.set(mensajeErrorCarga(error));
+        this.error.set(this.estadisticasService.mensajeErrorCarga(error));
         this.cargando.set(false);
       },
     });
@@ -120,5 +115,23 @@ export class Principaladmincomponent implements OnInit {
   // Altura de cada barra respecto al máximo del eje.
   obtenerAltura(valor: number): string {
     return `${(valor / this.maximoGrafica()) * 100}%`;
+  }
+
+  /** Texto relativo como 'Hace 10 minutos' o 'Hace 2 días' (fecha completa si pasó un mes). */
+  private tiempoRelativo(fecha: string | null): string {
+    const d = this.estadisticasService.aFecha(fecha);
+    if (!d) return 'Sin fecha';
+
+    const minutos = Math.floor((Date.now() - d.getTime()) / 60000);
+    if (minutos < 1) return 'Hace un momento';
+    if (minutos < 60) return `Hace ${minutos} ${minutos === 1 ? 'minuto' : 'minutos'}`;
+
+    const horas = Math.floor(minutos / 60);
+    if (horas < 24) return `Hace ${horas} ${horas === 1 ? 'hora' : 'horas'}`;
+
+    const dias = Math.floor(horas / 24);
+    if (dias < 30) return `Hace ${dias} ${dias === 1 ? 'día' : 'días'}`;
+
+    return this.estadisticasService.formatearFecha(fecha);
   }
 }

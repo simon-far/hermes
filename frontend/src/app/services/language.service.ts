@@ -1,31 +1,10 @@
 import { Injectable } from '@angular/core';
 import type { Extension } from '@codemirror/state';
-import { LanguageCode } from '../../models/ai/ai.models';
-import { LanguageOption } from '../../models/languages/languages.models';
+import { LanguageCode } from '../models/ai.models';
 
+/** Resaltado de sintaxis del editor de código (CodeMirror) según el lenguaje. */
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  readonly languages: readonly LanguageOption[] = [
-    { code: 'JAVA', label: 'Java', extension: 'java' },
-    { code: 'PYTHON', label: 'Python', extension: 'py' },
-    { code: 'JAVASCRIPT', label: 'JavaScript', extension: 'js' },
-    { code: 'TYPESCRIPT', label: 'TypeScript', extension: 'ts' },
-    { code: 'CPP', label: 'C++', extension: 'cpp' },
-    { code: 'CSHARP', label: 'C#', extension: 'cs' },
-  ];
-
-  /** Extensiones aceptadas por un <input type="file">, por ejemplo ".java,.py". */
-  readonly acceptedExtensions: string = this.languages.map((l) => `.${l.extension}`).join(',');
-
-  option(code: LanguageCode): LanguageOption {
-    return this.languages.find((l) => l.code === code) ?? this.languages[0];
-  }
-
-  fromFileName(fileName: string): LanguageCode | null {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    return this.languages.find((l) => l.extension === ext)?.code ?? null;
-  }
-
   /** Carga bajo demanda el resaltado de sintaxis de CodeMirror para el lenguaje. */
   async loadExtension(code: LanguageCode): Promise<Extension> {
     switch (code) {

@@ -7,7 +7,7 @@ import { Footercomponent } from './components/usercomponentes/footercomponent/fo
 import { Traductorcomponent } from './components/usercomponentes/traductorcomponent/traductorcomponent';
 import { Codeeditorcomponent } from './components/usercomponentes/codeeditorcomponent/codeeditorcomponent';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { provideHttpClient } from '@angular/common/http';
 import { Principaladmincomponent } from './components/admincomponents/principaladmincomponent/principaladmincomponent';
 import { Historialcomponent } from './components/usercomponentes/historialcomponent/historialcomponent';
 import { Headeradmincomponent } from './components/admincomponents/headeradmincomponent/headeradmincomponent';
@@ -15,7 +15,6 @@ import { Usuariosadmincomponent } from './components/admincomponents/usuariosadm
 import { Solicitudesadmincomponent } from './components/admincomponents/solicitudesadmincomponent/solicitudesadmincomponent';
 import { Reportesadmincomponent } from './components/admincomponents/reportesadmincomponent/reportesadmincomponent';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { authInterceptor } from './interceptors/auth.interceptor';
 @NgModule({
   declarations: [
     App,
@@ -31,7 +30,7 @@ import { authInterceptor } from './interceptors/auth.interceptor';
     Reportesadmincomponent,
   ],
   imports: [BrowserModule, AppRoutingModule, FormsModule, MatSnackBarModule, ReactiveFormsModule],
-  providers: [provideBrowserGlobalErrorListeners(), provideHttpClient(withInterceptors([authInterceptor]))],
+  providers: [provideBrowserGlobalErrorListeners(), provideHttpClient()],
   bootstrap: [App],
 })
 export class AppModule {}

@@ -1,3 +1,5 @@
+import { Opcion } from './opcion.model';
+
 /** Traducción guardada en el historial del usuario (respuesta de GET /historial). */
 export interface TraduccionHistorial {
   id: number;
@@ -19,7 +21,7 @@ export interface TraduccionHistorialActualizacion {
 }
 
 /** Lenguajes disponibles en el traductor (mismos códigos que guarda el backend). */
-export const LENGUAJES_HISTORIAL: { valor: string; etiqueta: string }[] = [
+export const LENGUAJES_HISTORIAL: Opcion[] = [
   { valor: 'JAVASCRIPT', etiqueta: 'JavaScript' },
   { valor: 'TYPESCRIPT', etiqueta: 'TypeScript' },
   { valor: 'JAVA', etiqueta: 'Java' },
