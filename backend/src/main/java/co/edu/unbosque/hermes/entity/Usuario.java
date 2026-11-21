@@ -1,5 +1,6 @@
 package co.edu.unbosque.hermes.entity;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -15,6 +16,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 
 /**
@@ -51,10 +53,32 @@ public class Usuario implements UserDetails {
 	private boolean cuentaNoExpirada = true;
 
 	/**
+	 * Fecha y hora en la que se registró el usuario, asignada al insertarlo (ver
+	 * {@link #asignarFechaRegistro()}). Los usuarios creados antes de existir esta
+	 * columna la tienen en {@code null}.
+	 * <p>
+	 * No se usa {@code @CreationTimestamp} porque Hibernate 7 genera la columna
+	 * como NOT NULL, y MySQL no puede agregarla a una tabla que ya tiene filas.
+	 * </p>
+	 */
+	@Column(nullable = true, updatable = false)
+	private LocalDateTime fechaRegistro;
+
+	/**
 	 * Constructor vacio por defecto para la entidad Usuario.
 	 */
 	public Usuario() {
 		// Constructor por defecto requerido por JPA
+	}
+
+	/**
+	 * Asigna la fecha de registro justo antes de insertar el usuario.
+	 */
+	@PrePersist
+	void asignarFechaRegistro() {
+		if (fechaRegistro == null) {
+			fechaRegistro = LocalDateTime.now();
+		}
 	}
 
 	/**
@@ -180,6 +204,25 @@ public class Usuario implements UserDetails {
 	 */
 	public void setCuentaNoExpirada(boolean cuentaNoExpirada) {
 		this.cuentaNoExpirada = cuentaNoExpirada;
+	}
+
+	/**
+	 * Obtiene la fecha y hora de registro del usuario.
+	 *
+	 * @return Fecha de registro, o {@code null} si el usuario es anterior a esta
+	 *         columna.
+	 */
+	public LocalDateTime getFechaRegistro() {
+		return fechaRegistro;
+	}
+
+	/**
+	 * Establece la fecha y hora de registro del usuario.
+	 *
+	 * @param fechaRegistro Fecha de registro a asignar.
+	 */
+	public void setFechaRegistro(LocalDateTime fechaRegistro) {
+		this.fechaRegistro = fechaRegistro;
 	}
 
 	/**

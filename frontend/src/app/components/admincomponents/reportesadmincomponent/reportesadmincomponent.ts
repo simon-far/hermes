@@ -1,5 +1,22 @@
-import { Component } from '@angular/core';
-import { EstadisticaMensual, ReporteSolicitud, ReporteUsuario } from '../../../models/admin/reportes.models';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { forkJoin } from 'rxjs';
+import { EstadisticaMensual } from '../../../models/admin/reportes.models';
+import { Estadisticas } from '../../../models/admin/estadisticas.models';
+import { Solicitud } from '../../../models/admin/solicitud.model';
+import { User } from '../../../models/usuarios.model';
+import { EstadisticasService } from '../../../services/estadisticas.service';
+import { UsuarioService } from '../../../services/usuario.service';
+import {
+  etiquetaMes,
+  formatearFecha,
+  lenguajesOrdenados,
+  marcasEje,
+  maximoEje,
+  mensajeErrorCarga,
+} from '../admin-formato';
+
+/** Divisiones del eje Y del gráfico mensual (4 marcas). */
+const DIVISIONES_EJE = 3;
 
 @Component({
   selector: 'app-reportesadmincomponent',
@@ -7,93 +24,92 @@ import { EstadisticaMensual, ReporteSolicitud, ReporteUsuario } from '../../../m
   styleUrl: './reportesadmincomponent.css',
   templateUrl: './reportesadmincomponent.html',
 })
-export class Reportesadmincomponent { // Datos ficticios de usuarios
-  usuarios: ReporteUsuario[] = [
-    { id: 1, nombre: 'Laura Martínez', correo: 'laura@email.com', fechaRegistro: '2026-01-12' },
-    { id: 2, nombre: 'Carlos Rodríguez', correo: 'carlos@email.com', fechaRegistro: '2026-02-08' },
-    { id: 3, nombre: 'Mariana López', correo: 'mariana@email.com', fechaRegistro: '2026-03-15' },
-    { id: 4, nombre: 'Andrés Gómez', correo: 'andres@email.com', fechaRegistro: '2026-04-20' },
-    { id: 5, nombre: 'Sofía Torres', correo: 'sofia@email.com', fechaRegistro: '2026-05-03' }
-  ];
+export class Reportesadmincomponent implements OnInit {
+  private readonly estadisticasService = inject(EstadisticasService);
+  private readonly usuarioService = inject(UsuarioService);
 
-  // Datos ficticios de solicitudes
-  solicitudes: ReporteSolicitud[] = [
-    { id: 1001, usuario: 'Laura Martínez', tipo: 'Traducción de código', fecha: '2026-10-01', estado: 'Atendida' },
-    { id: 1002, usuario: 'Carlos Rodríguez', tipo: 'Mejora de código', fecha: '2026-10-04', estado: 'Pendiente' },
-    { id: 1003, usuario: 'Mariana López', tipo: 'Traducción de código', fecha: '2026-10-07', estado: 'En proceso' },
-    { id: 1004, usuario: 'Andrés Gómez', tipo: 'Mejora de código', fecha: '2026-10-12', estado: 'Atendida' },
-    { id: 1005, usuario: 'Sofía Torres', tipo: 'Traducción de código', fecha: '2026-10-18', estado: 'Pendiente' },
-    { id: 1006, usuario: 'Laura Martínez', tipo: 'Mejora de código', fecha: '2026-10-22', estado: 'Atendida' },
-    { id: 1007, usuario: 'Carlos Rodríguez', tipo: 'Traducción de código', fecha: '2026-10-25', estado: 'En proceso' },
-    { id: 1008, usuario: 'Andrés Gómez', tipo: 'Mejora de código', fecha: '2026-10-28', estado: 'Atendida' }
-  ];
+  readonly usuarios = signal<User[]>([]);
+  readonly solicitudes = signal<Solicitud[]>([]);
+  private readonly estadisticas = signal<Estadisticas | null>(null);
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
 
-  // Estadísticas mensuales ficticias
-  estadisticasMensuales: EstadisticaMensual[] = [
-    { mes: 'Jun', cantidad: 18 },
-    { mes: 'Jul', cantidad: 25 },
-    { mes: 'Ago', cantidad: 32 },
-    { mes: 'Sep', cantidad: 28 },
-    { mes: 'Oct', cantidad: 42 },
-    { mes: 'Nov', cantidad: 35 }
-  ];
+  // Resumen
+  readonly totalUsuarios = computed(() => this.usuarios().length);
+  readonly totalSolicitudes = computed(() => this.solicitudes().length);
+  readonly solicitudesMesActual = computed(
+    () => this.estadisticas()?.actividadMensual.at(-1)?.traducciones ?? 0
+  );
+  readonly totalLenguajes = computed(
+    () => Object.keys(this.estadisticas()?.traduccionesPorLenguaje ?? {}).length
+  );
 
-  // Resumen de usuarios
-  get totalUsuarios(): number {
-    return this.usuarios.length;
+  // Gráfico circular por lenguaje de destino
+  readonly lenguajes = computed(() => lenguajesOrdenados(this.estadisticas()?.traduccionesPorLenguaje));
+
+  readonly fondoDonut = computed(() => {
+    const lenguajes = this.lenguajes();
+    if (lenguajes.length === 0) return '#303449';
+
+    let acumulado = 0;
+    const tramos = lenguajes.map((l) => {
+      const inicio = acumulado;
+      acumulado += l.porcentaje;
+      return `${l.color} ${inicio}% ${acumulado}%`;
+    });
+    return `conic-gradient(${tramos.join(', ')})`;
+  });
+
+  // Gráfico de barras mensual
+  readonly estadisticasMensuales = computed<EstadisticaMensual[]>(() =>
+    (this.estadisticas()?.actividadMensual ?? []).map((a) => ({
+      mes: etiquetaMes(a.periodo),
+      cantidad: a.traducciones,
+    }))
+  );
+
+  private readonly maximoBarras = computed(() =>
+    maximoEje(this.estadisticasMensuales().map((e) => e.cantidad), DIVISIONES_EJE)
+  );
+
+  readonly marcasBarras = computed(() => marcasEje(this.maximoBarras(), DIVISIONES_EJE));
+
+  ngOnInit(): void {
+    forkJoin({
+      usuarios: this.usuarioService.getAll(),
+      solicitudes: this.estadisticasService.solicitudes(),
+      estadisticas: this.estadisticasService.obtener(),
+    }).subscribe({
+      next: ({ usuarios, solicitudes, estadisticas }) => {
+        // /user/getall responde 204 sin cuerpo cuando no hay usuarios.
+        this.usuarios.set(Array.isArray(usuarios) ? usuarios : []);
+        this.solicitudes.set(Array.isArray(solicitudes) ? solicitudes : []);
+        this.estadisticas.set(estadisticas);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        console.error('Error al consultar los reportes:', error);
+        this.error.set(mensajeErrorCarga(error));
+        this.cargando.set(false);
+      },
+    });
   }
 
-  // Resumen de solicitudes
-  get totalSolicitudes(): number {
-    return this.solicitudes.length;
-  }
-
-  get solicitudesPendientes(): number {
-    return this.solicitudes.filter(s => s.estado === 'Pendiente').length;
-  }
-
-  get solicitudesEnProceso(): number {
-    return this.solicitudes.filter(s => s.estado === 'En proceso').length;
-  }
-
-  get solicitudesAtendidas(): number {
-    return this.solicitudes.filter(s => s.estado === 'Atendida').length;
-  }
-
-  // Porcentajes para el gráfico circular
-  get porcentajePendientes(): number {
-    return this.totalSolicitudes
-      ? (this.solicitudesPendientes / this.totalSolicitudes) * 100
-      : 0;
-  }
-
-  get porcentajeEnProceso(): number {
-    return this.totalSolicitudes
-      ? (this.solicitudesEnProceso / this.totalSolicitudes) * 100
-      : 0;
-  }
-
-  get porcentajeAtendidas(): number {
-    return this.totalSolicitudes
-      ? (this.solicitudesAtendidas / this.totalSolicitudes) * 100
-      : 0;
-  }
-
-  // Altura de cada barra del gráfico mensual
+  // Altura de cada barra respecto al máximo del eje
   obtenerAlturaBarra(cantidad: number): number {
-    const maximo = Math.max(...this.estadisticasMensuales.map(item => item.cantidad));
-    return maximo > 0 ? (cantidad / maximo) * 100 : 0;
+    return (cantidad / this.maximoBarras()) * 100;
   }
 
   // Descargar reporte de usuarios
   descargarReporteUsuarios(): void {
-    const encabezados = ['ID', 'Nombre', 'Correo', 'Fecha de registro'];
+    const encabezados = ['ID', 'Usuario', 'Correo', 'Rol', 'Fecha de registro'];
 
-    const filas = this.usuarios.map(usuario => [
+    const filas = this.usuarios().map((usuario) => [
       usuario.id,
-      usuario.nombre,
-      usuario.correo,
-      usuario.fechaRegistro
+      usuario.username ?? '',
+      usuario.email ?? '',
+      usuario.rol ?? '',
+      formatearFecha(usuario.fechaRegistro),
     ]);
 
     this.descargarCSV('reporte_usuarios.csv', encabezados, filas);
@@ -101,14 +117,16 @@ export class Reportesadmincomponent { // Datos ficticios de usuarios
 
   // Descargar reporte de solicitudes
   descargarReporteSolicitudes(): void {
-    const encabezados = ['ID', 'Usuario', 'Tipo de solicitud', 'Fecha', 'Estado'];
+    const encabezados = ['ID', 'Usuario', 'Correo', 'Lenguaje de origen', 'Lenguaje de destino', 'Modelo', 'Fecha'];
 
-    const filas = this.solicitudes.map(solicitud => [
+    const filas = this.solicitudes().map((solicitud) => [
       solicitud.id,
-      solicitud.usuario,
-      solicitud.tipo,
-      solicitud.fecha,
-      solicitud.estado
+      solicitud.usuario ?? '',
+      solicitud.correo ?? '',
+      solicitud.lenguajeOrigen ?? '',
+      solicitud.lenguajeDestino ?? '',
+      solicitud.modelo ?? '',
+      formatearFecha(solicitud.fecha),
     ]);
 
     this.descargarCSV('reporte_solicitudes.csv', encabezados, filas);
@@ -127,7 +145,7 @@ export class Reportesadmincomponent { // Datos ficticios de usuarios
       .join('\n');
 
     const archivo = new Blob(
-      ['\uFEFF' + contenido],
+      ['﻿' + contenido],
       { type: 'text/csv;charset=utf-8;' }
     );
 

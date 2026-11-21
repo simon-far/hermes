@@ -1,54 +1,143 @@
 package co.edu.unbosque.hermes.service;
 
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import co.edu.unbosque.hermes.dto.ActividadMensualDTO;
 import co.edu.unbosque.hermes.dto.EstadisticasDTO;
+import co.edu.unbosque.hermes.dto.SolicitudAdminDTO;
 import co.edu.unbosque.hermes.entity.Traduccion;
+import co.edu.unbosque.hermes.entity.Usuario;
 import co.edu.unbosque.hermes.repository.TraduccionRepository;
 import co.edu.unbosque.hermes.repository.UsuarioRepository;
+import co.edu.unbosque.hermes.util.AESUtil;
 
+/**
+ * Calcula las métricas del panel de administración a partir de los usuarios y
+ * las traducciones guardadas en la base de datos.
+ */
 @Service
 public class EstadisticasService {
-	
-	private UsuarioRepository usuarioRepo ;
-	
-	private TraduccionRepository traduccionRepo;
-	
-	
-	public EstadisticasService() {
-		// TODO Auto-generated constructor stub
-	}
 
+	/** Cantidad de meses (incluido el actual) que se muestran en las gráficas. */
+	private static final int MESES_ACTIVIDAD = 6;
 
+	/** Cantidad de traducciones que se muestran como actividad reciente. */
+	private static final int CANTIDAD_ULTIMAS = 5;
 
+	private final UsuarioRepository usuarioRepo;
+
+	private final TraduccionRepository traduccionRepo;
+
+	/**
+	 * Único constructor: con un solo constructor Spring inyecta los repositorios.
+	 * (Si existiera también un constructor vacío, Spring usaría ese y los
+	 * repositorios quedarían en {@code null}).
+	 *
+	 * @param usuarioRepo    Repositorio de usuarios.
+	 * @param traduccionRepo Repositorio de traducciones.
+	 */
 	public EstadisticasService(UsuarioRepository usuarioRepo, TraduccionRepository traduccionRepo) {
 		this.usuarioRepo = usuarioRepo;
 		this.traduccionRepo = traduccionRepo;
 	}
-	
+
+	/**
+	 * Calcula los totales, el conteo por lenguaje de destino, la actividad de los
+	 * últimos meses y las últimas traducciones.
+	 *
+	 * @return Estadísticas generales de la plataforma.
+	 */
+	@Transactional(readOnly = true)
 	public EstadisticasDTO obtenerEstadisticas() {
-		long totalUsuarios = usuarioRepo.count();
-		long totalTraducciones= traduccionRepo.count();
-		
-		Map<String,Long> porLenguaje= new HashMap<>();
-		List<Traduccion> traducciones = traduccionRepo.findAll();
-		
-		for(Traduccion t : traducciones) {
+		List<Usuario> usuarios = usuarioRepo.findAll();
+		List<Traduccion> traducciones = traduccionRepo.findAllConUsuarioOrderByFechaDesc();
+
+		Map<String, Long> porLenguaje = new HashMap<>();
+		for (Traduccion t : traducciones) {
 			String lenguaje = t.getLenguajeDestino();
-			if(lenguaje == null || lenguaje.isBlank()) {
+			if (lenguaje == null || lenguaje.isBlank()) {
 				lenguaje = "sin especificar";
 			}
-			long actual = porLenguaje.getOrDefault(lenguaje, 0l);
-			porLenguaje.put(lenguaje, actual + 1);
+			porLenguaje.merge(lenguaje, 1L, Long::sum);
 		}
-		return new EstadisticasDTO(totalUsuarios, totalTraducciones,porLenguaje);
-	}
-	
-	
-	
 
+		List<SolicitudAdminDTO> ultimas = new ArrayList<>();
+		for (int i = 0; i < Math.min(CANTIDAD_ULTIMAS, traducciones.size()); i++) {
+			ultimas.add(aSolicitudAdmin(traducciones.get(i)));
+		}
+
+		return new EstadisticasDTO(usuarios.size(), traducciones.size(), porLenguaje,
+				actividadMensual(usuarios, traducciones), ultimas);
+	}
+
+	/**
+	 * Lista todas las traducciones con los datos (descifrados) de su usuario, de
+	 * la más reciente a la más antigua.
+	 *
+	 * @return Lista de solicitudes para el panel de administración.
+	 */
+	@Transactional(readOnly = true)
+	public List<SolicitudAdminDTO> obtenerSolicitudes() {
+		List<SolicitudAdminDTO> lista = new ArrayList<>();
+		traduccionRepo.findAllConUsuarioOrderByFechaDesc().forEach((t) -> lista.add(aSolicitudAdmin(t)));
+		return lista;
+	}
+
+	/**
+	 * Cuenta usuarios registrados y traducciones por mes durante los últimos
+	 * {@link #MESES_ACTIVIDAD} meses. Los registros sin fecha no se cuentan.
+	 */
+	private List<ActividadMensualDTO> actividadMensual(List<Usuario> usuarios, List<Traduccion> traducciones) {
+		YearMonth actual = YearMonth.now();
+		Map<YearMonth, long[]> conteo = new LinkedHashMap<>();
+		for (int i = MESES_ACTIVIDAD - 1; i >= 0; i--) {
+			// [0] = usuarios, [1] = traducciones
+			conteo.put(actual.minusMonths(i), new long[2]);
+		}
+
+		for (Usuario u : usuarios) {
+			sumar(conteo, u.getFechaRegistro(), 0);
+		}
+		for (Traduccion t : traducciones) {
+			sumar(conteo, t.getFecha(), 1);
+		}
+
+		List<ActividadMensualDTO> lista = new ArrayList<>();
+		conteo.forEach((mes, valores) -> lista.add(new ActividadMensualDTO(mes.toString(), valores[0], valores[1])));
+		return lista;
+	}
+
+	private static void sumar(Map<YearMonth, long[]> conteo, LocalDateTime fecha, int posicion) {
+		if (fecha == null) {
+			return;
+		}
+		long[] valores = conteo.get(YearMonth.from(fecha));
+		if (valores != null) {
+			valores[posicion]++;
+		}
+	}
+
+	/**
+	 * Convierte una traducción en el DTO del panel. Se descifran los datos del
+	 * usuario en el DTO, nunca en la entidad, para que Hibernate no guarde el
+	 * texto plano en la base de datos.
+	 */
+	private static SolicitudAdminDTO aSolicitudAdmin(Traduccion t) {
+		Usuario u = t.getUsuario();
+		return new SolicitudAdminDTO(t.getId(), descifrar(u.getUsername()), descifrar(u.getEmail()),
+				t.getLenguajeOrigen(), t.getLenguajeDestino(), t.getModelo(), t.getFecha());
+	}
+
+	private static String descifrar(String cifrado) {
+		return cifrado == null ? null : AESUtil.decrypt(cifrado);
+	}
 }

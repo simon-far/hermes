@@ -21,6 +21,11 @@
 
   </section>
 
+  <div class="load-error" *ngIf="error()">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    {{ error() }}
+  </div>
+
 
   <!-- ESTADÍSTICAS -->
   <section class="statistics-section">
@@ -36,7 +41,7 @@
 
       <article
         class="stat-card"
-        *ngFor="let estadistica of estadisticas"
+        *ngFor="let estadistica of estadisticas()"
       >
 
         <div class="stat-card-top">
@@ -75,13 +80,13 @@
   <!-- RESUMEN Y GRÁFICAS -->
   <section class="dashboard-content">
 
-    <!-- RESUMEN DE SOLICITUDES -->
+    <!-- SOLICITUDES POR LENGUAJE -->
     <article class="dashboard-card requests-card">
 
       <div class="card-heading">
         <div>
-          <h2>Estado de solicitudes</h2>
-          <p>Distribución de las solicitudes recibidas</p>
+          <h2>Solicitudes por lenguaje</h2>
+          <p>Lenguajes de destino más solicitados</p>
         </div>
 
         <div class="heading-icon">
@@ -90,7 +95,7 @@
       </div>
 
       <div class="requests-total">
-        <h3>{{ totalSolicitudes }}</h3>
+        <h3>{{ totalSolicitudes() | number }}</h3>
         <span>Solicitudes totales</span>
       </div>
 
@@ -99,12 +104,10 @@
         <div class="progress-track">
           <div
             class="progress-attended"
-            [style.width.%]="obtenerPorcentaje(solicitudesAtendidas)"
-          ></div>
-
-          <div
-            class="progress-pending"
-            [style.width.%]="obtenerPorcentaje(solicitudesPendientes)"
+            *ngFor="let lenguaje of lenguajes()"
+            [style.width.%]="lenguaje.porcentaje"
+            [style.background]="lenguaje.color"
+            [title]="lenguaje.lenguaje + ': ' + lenguaje.cantidad"
           ></div>
         </div>
 
@@ -112,31 +115,28 @@
 
       <div class="request-legend">
 
-        <div class="legend-item">
+        <div class="legend-item" *ngFor="let lenguaje of lenguajes()">
           <div class="legend-label">
-            <span class="legend-dot attended"></span>
-            <span>Atendidas</span>
+            <span class="legend-dot" [style.background]="lenguaje.color"></span>
+            <span>{{ lenguaje.lenguaje }}</span>
           </div>
 
-          <strong>{{ solicitudesAtendidas }}</strong>
+          <strong>{{ lenguaje.cantidad }}</strong>
         </div>
 
-        <div class="legend-item">
+        <div class="legend-item" *ngIf="!cargando() && lenguajes().length === 0">
           <div class="legend-label">
-            <span class="legend-dot pending"></span>
-            <span>Pendientes</span>
+            <span>Aún no hay solicitudes registradas.</span>
           </div>
-
-          <strong>{{ solicitudesPendientes }}</strong>
         </div>
 
       </div>
 
-      <div class="completion-rate">
+      <div class="completion-rate" *ngIf="lenguajes().length">
         <div>
-          <span>Porcentaje de atención</span>
+          <span>Lenguaje más solicitado</span>
           <strong>
-            {{ obtenerPorcentaje(solicitudesAtendidas) | number:'1.1-1' }}%
+            {{ lenguajes()[0].lenguaje }} ({{ lenguajes()[0].porcentaje | number:'1.0-1' }}%)
           </strong>
         </div>
       </div>
@@ -151,7 +151,7 @@
 
         <div>
           <h2>Actividad de la plataforma</h2>
-          <p>Usuarios y solicitudes durante los últimos meses</p>
+          <p>Usuarios registrados y solicitudes en los últimos 6 meses</p>
         </div>
 
         <div class="heading-icon">
@@ -164,7 +164,7 @@
 
         <span>
           <i class="legend-dot users"></i>
-          Usuarios
+          Usuarios registrados
         </span>
 
         <span>
@@ -177,11 +177,7 @@
       <div class="chart-container">
 
         <div class="chart-y-axis">
-          <span>100</span>
-          <span>75</span>
-          <span>50</span>
-          <span>25</span>
-          <span>0</span>
+          <span *ngFor="let marca of marcasGrafica()">{{ marca | number:'1.0-0' }}</span>
         </div>
 
         <div class="chart-content">
@@ -198,7 +194,7 @@
 
             <div
               class="chart-column"
-              *ngFor="let dato of datosGrafica"
+              *ngFor="let dato of datosGrafica()"
             >
 
               <div class="bar-group">
@@ -241,20 +237,24 @@
 
       <div>
         <h2>Actividad reciente</h2>
-        <p>Últimos movimientos registrados en la plataforma</p>
+        <p>Últimas solicitudes registradas en la plataforma</p>
       </div>
 
       <span class="activity-count">
-        {{ actividadesRecientes.length }} actividades
+        {{ actividadesRecientes().length }} actividades
       </span>
 
     </div>
 
     <div class="activity-list">
 
+      <p class="activity-empty" *ngIf="!cargando() && actividadesRecientes().length === 0">
+        Aún no hay solicitudes registradas.
+      </p>
+
       <article
         class="activity-item"
-        *ngFor="let actividad of actividadesRecientes"
+        *ngFor="let actividad of actividadesRecientes()"
       >
 
         <div class="activity-icon" [ngClass]="actividad.tipo">

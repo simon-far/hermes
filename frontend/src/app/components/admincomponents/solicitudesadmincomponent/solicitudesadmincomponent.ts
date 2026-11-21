@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
-import { EstadoSolicitud, Solicitud } from '../../../models/admin/solicitud.model';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Solicitud } from '../../../models/admin/solicitud.model';
+import { EstadisticasService } from '../../../services/estadisticas.service';
+import { esDelMesActual, formatearFecha, mensajeErrorCarga, textoLenguajes } from '../admin-formato';
 
 @Component({
   selector: 'app-solicitudesadmincomponent',
@@ -7,103 +9,64 @@ import { EstadoSolicitud, Solicitud } from '../../../models/admin/solicitud.mode
   styleUrl: './solicitudesadmincomponent.css',
   templateUrl: './solicitudesadmincomponent.html',
 })
-export class Solicitudesadmincomponent {busqueda = '';
+export class Solicitudesadmincomponent implements OnInit {
+  private readonly estadisticasService = inject(EstadisticasService);
 
-  filtroEstado: 'Todas' | EstadoSolicitud = 'Todas';
+  busqueda = '';
 
-  solicitudes: Solicitud[] = [
-    {
-      id: 1001,
-      usuario: 'Laura Martínez',
-      correo: 'laura.martinez@email.com',
-      tipo: 'Mejora de código',
-      fecha: '02/11/2026',
-      estado: 'Pendiente',
-      descripcion: 'Solicitud para mejorar la legibilidad y estructura de un código Java.'
-    },
-    {
-      id: 1002,
-      usuario: 'Carlos Rodríguez',
-      correo: 'carlos.rodriguez@email.com',
-      tipo: 'Traducción de código',
-      fecha: '01/11/2026',
-      estado: 'En proceso',
-      descripcion: 'Solicitud para traducir un programa de Python a Java.'
-    },
-    {
-      id: 1003,
-      usuario: 'Mariana López',
-      correo: 'mariana.lopez@email.com',
-      tipo: 'Mejora de código',
-      fecha: '30/10/2026',
-      estado: 'Atendida',
-      descripcion: 'Revisión de buenas prácticas y optimización de código JavaScript.'
-    },
-    {
-      id: 1004,
-      usuario: 'Andrés Gómez',
-      correo: 'andres.gomez@email.com',
-      tipo: 'Traducción de código',
-      fecha: '29/10/2026',
-      estado: 'Pendiente',
-      descripcion: 'Traducción de un algoritmo de Java a Python.'
-    },
-    {
-      id: 1005,
-      usuario: 'Sofía Ramírez',
-      correo: 'sofia.ramirez@email.com',
-      tipo: 'Mejora de código',
-      fecha: '28/10/2026',
-      estado: 'Atendida',
-      descripcion: 'Solicitud para simplificar funciones y eliminar redundancias.'
-    },
-    {
-      id: 1006,
-      usuario: 'Daniel Herrera',
-      correo: 'daniel.herrera@email.com',
-      tipo: 'Traducción de código',
-      fecha: '27/10/2026',
-      estado: 'En proceso',
-      descripcion: 'Conversión de código JavaScript a Python.'
-    }
-  ];
+  /** Lenguaje de destino seleccionado en el filtro ('Todos' = sin filtro). */
+  filtroLenguaje = 'Todos';
+
+  readonly solicitudes = signal<Solicitud[]>([]);
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
+
+  readonly totalMesActual = computed(() => this.solicitudes().filter((s) => esDelMesActual(s.fecha)).length);
+
+  readonly totalUsuariosConSolicitudes = computed(
+    () => new Set(this.solicitudes().map((s) => s.correo)).size
+  );
+
+  /** Lenguajes de destino presentes en las solicitudes, para el filtro. */
+  readonly lenguajesDisponibles = computed(() =>
+    [...new Set(this.solicitudes().map((s) => this.lenguajeDestino(s)))].sort((a, b) => a.localeCompare(b))
+  );
+
+  readonly textoLenguajes = textoLenguajes;
+  readonly formatearFecha = formatearFecha;
+
+  ngOnInit(): void {
+    this.estadisticasService.solicitudes().subscribe({
+      next: (respuesta) => {
+        this.solicitudes.set(Array.isArray(respuesta) ? respuesta : []);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        console.error('Error al consultar las solicitudes:', error);
+        this.error.set(mensajeErrorCarga(error));
+        this.cargando.set(false);
+      },
+    });
+  }
 
   get solicitudesFiltradas(): Solicitud[] {
     const termino = this.busqueda.trim().toLowerCase();
 
-    return this.solicitudes.filter(solicitud => {
+    return this.solicitudes().filter((solicitud) => {
       const coincideBusqueda =
-        solicitud.usuario.toLowerCase().includes(termino) ||
-        solicitud.correo.toLowerCase().includes(termino) ||
-        solicitud.tipo.toLowerCase().includes(termino);
+        !termino ||
+        [solicitud.usuario, solicitud.correo, textoLenguajes(solicitud), solicitud.modelo]
+          .some((campo) => campo?.toLowerCase().includes(termino));
 
-      const coincideEstado =
-        this.filtroEstado === 'Todas' ||
-        solicitud.estado === this.filtroEstado;
+      const coincideLenguaje =
+        this.filtroLenguaje === 'Todos' ||
+        this.lenguajeDestino(solicitud) === this.filtroLenguaje;
 
-      return coincideBusqueda && coincideEstado;
+      return coincideBusqueda && coincideLenguaje;
     });
   }
 
-  get totalPendientes(): number {
-    return this.solicitudes.filter(s => s.estado === 'Pendiente').length;
+  private lenguajeDestino(solicitud: Solicitud): string {
+    return solicitud.lenguajeDestino?.trim() || 'Sin especificar';
   }
-
-  get totalEnProceso(): number {
-    return this.solicitudes.filter(s => s.estado === 'En proceso').length;
-  }
-
-  get totalAtendidas(): number {
-    return this.solicitudes.filter(s => s.estado === 'Atendida').length;
-  }
-
-  obtenerClaseEstado(estado: EstadoSolicitud): string {
-    switch (estado) {
-      case 'Pendiente':
-        return 'pending';
-      case 'En proceso':
-        return 'processing';
-      case 'Atendida':
-        return 'completed';
-    }
-  }}
+}
