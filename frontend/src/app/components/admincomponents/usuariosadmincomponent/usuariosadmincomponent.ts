@@ -13,19 +13,9 @@ export class Usuariosadmincomponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
 
   busqueda = '';
-  filtroEstado: 'Todos' | 'Activo' | 'Inactivo' = 'Todos';
-
-  // 2. Convierte usuarios en un signal
   usuarios = signal<User[]>([]);
+
   totalUsuarios = computed(() => this.usuarios().length);
-
-  totalActivos = computed(() =>
-    this.usuarios().filter((user) => user.cuentaNoExpirada).length
-  );
-
-  totalInactivos = computed(() =>
-    this.usuarios().filter((user) => !user.cuentaNoExpirada).length
-  );
 
   ngOnInit(): void {
     this.cargarUsuarios();
@@ -34,8 +24,6 @@ export class Usuariosadmincomponent implements OnInit {
   cargarUsuarios(): void {
     this.usuarioService.getAll().subscribe({
       next: (respuesta) => {
-        console.log('Respuesta recibida:', respuesta);
-        // 3. Usa .set() para actualizar el signal y notificar a la vista
         this.usuarios.set(Array.isArray(respuesta) ? respuesta : []);
       },
       error: (error) => {
@@ -44,20 +32,13 @@ export class Usuariosadmincomponent implements OnInit {
     });
   }
 
-  // 4. Lee el signal usando this.usuarios() en tus getters
   get usuariosFiltrados(): User[] {
     const termino = this.busqueda.trim().toLowerCase();
 
-    return this.usuarios().filter((user) => {
-      const coincideBusqueda =
-        user.username?.toLowerCase().includes(termino) ||
-        user.email?.toLowerCase().includes(termino);
-
-      const estado = user.cuentaNoExpirada ? 'Activo' : 'Inactivo';
-      const coincideEstado = this.filtroEstado === 'Todos' || estado === this.filtroEstado;
-
-      return coincideBusqueda && coincideEstado;
-    });
+    return this.usuarios().filter((user) =>
+      user.username?.toLowerCase().includes(termino) ||
+      user.email?.toLowerCase().includes(termino)
+    );
   }
 
 

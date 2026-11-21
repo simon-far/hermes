@@ -10,7 +10,7 @@
       <h1>Bienvenido, Administrador</h1>
 
       <p>
-        Aquí puedes consultar el estado general de la plataforma CodeShift.
+        Aquí puedes consultar el estado general de la plataforma hermes.
       </p>
     </div>
 
@@ -34,37 +34,22 @@
 
     <div class="statistics-grid">
 
-      <article
-        class="stat-card"
-        *ngFor="let estadistica of estadisticas"
-      >
-
-        <div class="stat-card-top">
-
-          <div class="stat-icon" [ngClass]="estadistica.color">
-            <i [class]="estadistica.icono"></i>
+      <article class="stat-card" *ngFor="let item of estadisticas()">
+        <div class="stat-top">
+          <div class="stat-icon" [ngClass]="item.color">
+            <i [class]="item.icono"></i>
           </div>
 
-          <span
-            class="stat-variation"
-            *ngIf="estadistica.variacion"
-            [ngClass]="estadistica.color"
-          >
-            {{ estadistica.variacion }}
+          <span class="stat-variation" *ngIf="item.variacion">
+            {{ item.variacion }}
           </span>
-
         </div>
 
-        <div class="stat-information">
-
-          <h3>{{ estadistica.valor | number }}</h3>
-
-          <p>{{ estadistica.titulo }}</p>
-
-          <span>{{ estadistica.descripcion }}</span>
-
+        <div>
+          <h2>{{ item.valor }}</h2>
+          <span>{{ item.titulo }}</span>
+          <p>{{ item.descripcion }}</p>
         </div>
-
       </article>
 
     </div>
@@ -89,10 +74,10 @@
         </div>
       </div>
 
-      <div class="requests-total">
-        <h3>{{ totalSolicitudes }}</h3>
-        <span>Solicitudes totales</span>
-      </div>
+      <<div class="requests-total">
+      <h3>{{ totalSolicitudes() }}</h3>
+      <span>Solicitudes totales</span>
+    </div>
 
       <div class="requests-progress">
 
@@ -298,8 +283,10 @@
         </div>
 
         <div>
+
           <h3>Gestión de usuarios</h3>
           <p>Consulta los usuarios registrados.</p>
+
         </div>
 
         <i class="fa-solid fa-arrow-right quick-arrow"></i>

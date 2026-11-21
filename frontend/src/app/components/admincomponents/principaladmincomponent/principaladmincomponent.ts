@@ -1,5 +1,8 @@
-import {Component} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Actividad, DatoGrafica, Estadistica } from '../../../models/admin/panel.models';
+import { UsuarioService } from '../../../services/usuario.service';
+import { EstadisticasService } from '../../../services/estadisticas.service';
+import { Estadisticas } from '../../../models/estadisticas.model';
 
 @Component({
   selector: 'app-principaladmincomponent',
@@ -7,93 +10,101 @@ import { Actividad, DatoGrafica, Estadistica } from '../../../models/admin/panel
   styleUrl: './principaladmincomponent.css',
   templateUrl: './principaladmincomponent.html',
 })
-export class Principaladmincomponent {
-  estadisticas: Estadistica[] = [
-    {
-      titulo: 'Usuarios registrados',
-      valor: 128,
-      descripcion: 'Usuarios en la plataforma',
-      icono: 'fa-solid fa-users',
-      variacion: '+12% este mes',
-      color: 'purple'
-    },
-    {
-      titulo: 'Solicitudes recibidas',
-      valor: 346,
-      descripcion: 'Total de solicitudes',
-      icono: 'fa-solid fa-file-lines',
-      variacion: '+8% este mes',
-      color: 'blue'
-    },
-    {
-      titulo: 'Solicitudes pendientes',
-      valor: 12,
-      descripcion: 'Requieren atención',
-      icono: 'fa-solid fa-clock',
-      color: 'orange'
-    },
-    {
-      titulo: 'Solicitudes atendidas',
-      valor: 334,
-      descripcion: 'Solicitudes completadas',
-      icono: 'fa-solid fa-circle-check',
-      variacion: '96,5% del total',
-      color: 'green'
-    }
-  ];
+export class Principaladmincomponent implements OnInit {
+  private readonly estadisticasService = inject(EstadisticasService);
 
-  totalSolicitudes = 346;
-  solicitudesAtendidas = 334;
-  solicitudesPendientes = 12;
+  // 1. Signal que guarda toda la respuesta de /estadisticas
+  datosEstadisticas = signal<Estadisticas>({
+    totalUsuarios: 0,
+    totalTraducciones: 0,
+    traduccionesPorLenguaje: {},
+  });
 
-  // Datos ficticios para la gráfica de actividad mensual.
+  // 2. Llamada única al backend al iniciar
+  ngOnInit(): void {
+    this.estadisticasService.obtenerEstadisticas().subscribe({
+      next: (datos) => {
+        console.log('Estadísticas recibidas:', datos);
+        this.datosEstadisticas.set(datos);
+      },
+      error: (err) => console.error('Error al traer estadísticas:', err),
+    });
+  }
+
+  // 3. Tarjetas superiores conectadas a datos reales
+  estadisticas = computed<Estadistica[]>(() => {
+    const info = this.datosEstadisticas();
+    const cantidadLenguajes = Object.keys(info.traduccionesPorLenguaje || {}).length;
+
+    return [
+      {
+        titulo: 'Usuarios registrados',
+        valor: info.totalUsuarios, // <-- Dato real de EstadisticasDTO
+        descripcion: 'Usuarios en la plataforma',
+        icono: 'fa-solid fa-users',
+        variacion: 'Activos en Hermes',
+        color: 'purple',
+      },
+      {
+        titulo: 'Solicitudes recibidas',
+        valor: info.totalTraducciones, // <-- Dato real de EstadisticasDTO
+        descripcion: 'Traducciones realizadas',
+        icono: 'fa-solid fa-file-lines',
+        variacion: 'Total acumulado',
+        color: 'blue',
+      },
+      {
+        titulo: 'Lenguajes utilizados',
+        valor: cantidadLenguajes, // <-- Dato real extraído del Map
+        descripcion: 'Lenguajes con traducciones',
+        icono: 'fa-solid fa-code',
+        color: 'orange',
+      },
+      {
+        titulo: 'Solicitudes atendidas',
+        valor: info.totalTraducciones, // <-- Todas las guardadas fueron atendidas
+        descripcion: 'Traducciones completadas',
+        icono: 'fa-solid fa-circle-check',
+        variacion: '100% atendidas',
+        color: 'green',
+      },
+    ];
+  });
+
+  // 4. Variables del bloque inferior sincronizadas con el dato real
+  get totalSolicitudes(): number {
+    return this.datosEstadisticas().totalTraducciones;
+  }
+
+  get solicitudesAtendidas(): number {
+    return this.datosEstadisticas().totalTraducciones;
+  }
+
+  solicitudesPendientes = 0;
+
   datosGrafica: DatoGrafica[] = [
-    {periodo: 'May', usuarios: 35, solicitudes: 45},
-    {periodo: 'Jun', usuarios: 48, solicitudes: 58},
-    {periodo: 'Jul', usuarios: 55, solicitudes: 65},
-    {periodo: 'Ago', usuarios: 62, solicitudes: 72},
-    {periodo: 'Sep', usuarios: 78, solicitudes: 85},
-    {periodo: 'Oct', usuarios: 92, solicitudes: 100}
+    { periodo: 'May', usuarios: 35, solicitudes: 45 },
+    { periodo: 'Jun', usuarios: 48, solicitudes: 60 },
+    { periodo: 'Jul', usuarios: 62, solicitudes: 55 },
+    { periodo: 'Ago', usuarios: 75, solicitudes: 80 },
+    { periodo: 'Sep', usuarios: 90, solicitudes: 95 },
   ];
 
   actividadesRecientes: Actividad[] = [
     {
       titulo: 'Nuevo usuario registrado',
-      descripcion: 'Se ha registrado un nuevo usuario en la plataforma.',
-      fecha: 'Hace 10 minutos',
+      descripcion: 'Un usuario creó una cuenta en la plataforma.',
+      fecha: 'Hace 5 min',
+      tipo: 'user',
       icono: 'fa-solid fa-user-plus',
-      tipo: 'purple'
     },
-    {
-      titulo: 'Nueva solicitud recibida',
-      descripcion: 'Un usuario ha enviado una nueva solicitud.',
-      fecha: 'Hace 35 minutos',
-      icono: 'fa-solid fa-inbox',
-      tipo: 'blue'
-    },
-    {
-      titulo: 'Solicitud atendida',
-      descripcion: 'Una solicitud ha sido marcada como completada.',
-      fecha: 'Hace 1 hora',
-      icono: 'fa-solid fa-check',
-      tipo: 'green'
-    },
-    {
-      titulo: 'Nuevo usuario registrado',
-      descripcion: 'Se ha creado una nueva cuenta.',
-      fecha: 'Hace 3 horas',
-      icono: 'fa-solid fa-user-plus',
-      tipo: 'purple'
-    }
   ];
 
-  // Calcula la altura de las barras tomando como referencia el valor máximo.
-  obtenerAltura(valor: number): string {
-    const maximo = 100;
-    return `${(valor / maximo) * 100}%`;
+  obtenerPorcentaje(valor: number): number {
+    return this.totalSolicitudes > 0 ? (valor / this.totalSolicitudes) * 100 : 0;
   }
 
-  obtenerPorcentaje(valor: number): number {
-    return (valor / this.totalSolicitudes) * 100;
+  obtenerAltura(valor: number): string {
+    return `${Math.min(valor, 100)}%`;
   }
 }
