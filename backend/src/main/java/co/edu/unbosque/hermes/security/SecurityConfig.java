@@ -68,6 +68,8 @@ public class SecurityConfig {
 						.requestMatchers("/auth/**").permitAll()
 						.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 						.requestMatchers("/user/**").hasRole("ADMIN")
+						// Cubre /estadisticas y /estadisticas/solicitudes (panel de administración)
+						.requestMatchers("/estadisticas", "/estadisticas/**").hasRole("ADMIN")
 						.requestMatchers("/cohere/**", "/nemotron/**", "/particle/**").hasAnyRole("USER", "ADMIN")
 						.anyRequest().authenticated())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -1,6 +1,7 @@
 package co.edu.unbosque.hermes.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import co.edu.unbosque.hermes.entity.Traduccion;
 import java.util.List;
@@ -32,5 +33,15 @@ public interface TraduccionRepository extends JpaRepository<Traduccion, Long>{
 	 * @param id Identificador único del usuario.
 	 */
 	void deleteByUsuarioId(Long id);
+
+	/**
+	 * Recupera todas las traducciones junto con su usuario en una sola consulta
+	 * (evita una consulta extra por cada traducción al leer la relación LAZY),
+	 * de la más reciente a la más antigua.
+	 *
+	 * @return Lista de traducciones con el usuario ya cargado.
+	 */
+	@Query("select t from Traduccion t join fetch t.usuario order by t.fecha desc")
+	List<Traduccion> findAllConUsuarioOrderByFechaDesc();
 
 }

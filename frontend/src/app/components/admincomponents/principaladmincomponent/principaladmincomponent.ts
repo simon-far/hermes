@@ -1,5 +1,19 @@
-import {Component} from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Actividad, DatoGrafica, Estadistica } from '../../../models/admin/panel.models';
+import { Estadisticas } from '../../../models/admin/estadisticas.models';
+import { EstadisticasService } from '../../../services/estadisticas.service';
+import {
+  etiquetaMes,
+  lenguajesOrdenados,
+  marcasEje,
+  maximoEje,
+  mensajeErrorCarga,
+  textoLenguajes,
+  tiempoRelativo,
+} from '../admin-formato';
+
+/** Divisiones del eje Y de la gráfica de actividad (5 marcas). */
+const DIVISIONES_EJE = 4;
 
 @Component({
   selector: 'app-principaladmincomponent',
@@ -7,93 +21,104 @@ import { Actividad, DatoGrafica, Estadistica } from '../../../models/admin/panel
   styleUrl: './principaladmincomponent.css',
   templateUrl: './principaladmincomponent.html',
 })
-export class Principaladmincomponent {
-  estadisticas: Estadistica[] = [
-    {
-      titulo: 'Usuarios registrados',
-      valor: 128,
-      descripcion: 'Usuarios en la plataforma',
-      icono: 'fa-solid fa-users',
-      variacion: '+12% este mes',
-      color: 'purple'
-    },
-    {
-      titulo: 'Solicitudes recibidas',
-      valor: 346,
-      descripcion: 'Total de solicitudes',
-      icono: 'fa-solid fa-file-lines',
-      variacion: '+8% este mes',
-      color: 'blue'
-    },
-    {
-      titulo: 'Solicitudes pendientes',
-      valor: 12,
-      descripcion: 'Requieren atención',
-      icono: 'fa-solid fa-clock',
-      color: 'orange'
-    },
-    {
-      titulo: 'Solicitudes atendidas',
-      valor: 334,
-      descripcion: 'Solicitudes completadas',
-      icono: 'fa-solid fa-circle-check',
-      variacion: '96,5% del total',
-      color: 'green'
-    }
-  ];
+export class Principaladmincomponent implements OnInit {
+  private readonly estadisticasService = inject(EstadisticasService);
 
-  totalSolicitudes = 346;
-  solicitudesAtendidas = 334;
-  solicitudesPendientes = 12;
+  private readonly datos = signal<Estadisticas | null>(null);
+  readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
 
-  // Datos ficticios para la gráfica de actividad mensual.
-  datosGrafica: DatoGrafica[] = [
-    {periodo: 'May', usuarios: 35, solicitudes: 45},
-    {periodo: 'Jun', usuarios: 48, solicitudes: 58},
-    {periodo: 'Jul', usuarios: 55, solicitudes: 65},
-    {periodo: 'Ago', usuarios: 62, solicitudes: 72},
-    {periodo: 'Sep', usuarios: 78, solicitudes: 85},
-    {periodo: 'Oct', usuarios: 92, solicitudes: 100}
-  ];
+  readonly totalSolicitudes = computed(() => this.datos()?.totalTraducciones ?? 0);
 
-  actividadesRecientes: Actividad[] = [
-    {
-      titulo: 'Nuevo usuario registrado',
-      descripcion: 'Se ha registrado un nuevo usuario en la plataforma.',
-      fecha: 'Hace 10 minutos',
-      icono: 'fa-solid fa-user-plus',
-      tipo: 'purple'
-    },
-    {
-      titulo: 'Nueva solicitud recibida',
-      descripcion: 'Un usuario ha enviado una nueva solicitud.',
-      fecha: 'Hace 35 minutos',
+  /** Actividad del mes en curso (último elemento de la lista mensual). */
+  private readonly mesActual = computed(() => this.datos()?.actividadMensual.at(-1));
+
+  readonly lenguajes = computed(() => lenguajesOrdenados(this.datos()?.traduccionesPorLenguaje));
+
+  readonly estadisticas = computed<Estadistica[]>(() => {
+    const datos = this.datos();
+    const mes = this.mesActual();
+    const lenguajes = this.lenguajes();
+
+    return [
+      {
+        titulo: 'Usuarios registrados',
+        valor: datos?.totalUsuarios ?? 0,
+        descripcion: 'Usuarios en la plataforma',
+        icono: 'fa-solid fa-users',
+        variacion: mes?.usuarios ? `+${mes.usuarios} este mes` : undefined,
+        color: 'purple',
+      },
+      {
+        titulo: 'Solicitudes totales',
+        valor: datos?.totalTraducciones ?? 0,
+        descripcion: 'Traducciones realizadas',
+        icono: 'fa-solid fa-file-lines',
+        variacion: mes?.traducciones ? `+${mes.traducciones} este mes` : undefined,
+        color: 'blue',
+      },
+      {
+        titulo: 'Solicitudes este mes',
+        valor: mes?.traducciones ?? 0,
+        descripcion: 'Durante el mes en curso',
+        icono: 'fa-solid fa-calendar-days',
+        color: 'orange',
+      },
+      {
+        titulo: 'Lenguajes utilizados',
+        valor: Object.keys(datos?.traduccionesPorLenguaje ?? {}).length,
+        descripcion: lenguajes.length ? `Más solicitado: ${lenguajes[0].lenguaje}` : 'Sin solicitudes aún',
+        icono: 'fa-solid fa-code',
+        color: 'green',
+      },
+    ];
+  });
+
+  readonly datosGrafica = computed<DatoGrafica[]>(() =>
+    (this.datos()?.actividadMensual ?? []).map((a) => ({
+      periodo: etiquetaMes(a.periodo),
+      usuarios: a.usuarios,
+      solicitudes: a.traducciones,
+    }))
+  );
+
+  /** Valor máximo del eje Y según los datos reales. */
+  private readonly maximoGrafica = computed(() =>
+    maximoEje(
+      this.datosGrafica().flatMap((d) => [d.usuarios, d.solicitudes]),
+      DIVISIONES_EJE
+    )
+  );
+
+  readonly marcasGrafica = computed(() => marcasEje(this.maximoGrafica(), DIVISIONES_EJE));
+
+  /** Solo actividad de solicitudes: no hay forma de saber qué usuarios están conectados. */
+  readonly actividadesRecientes = computed<Actividad[]>(() =>
+    (this.datos()?.ultimasSolicitudes ?? []).map((s) => ({
+      titulo: `Nueva solicitud: ${textoLenguajes(s)}`,
+      descripcion: `Realizada por ${s.usuario}${s.modelo ? ' con el modelo ' + s.modelo : ''}.`,
+      fecha: tiempoRelativo(s.fecha),
       icono: 'fa-solid fa-inbox',
-      tipo: 'blue'
-    },
-    {
-      titulo: 'Solicitud atendida',
-      descripcion: 'Una solicitud ha sido marcada como completada.',
-      fecha: 'Hace 1 hora',
-      icono: 'fa-solid fa-check',
-      tipo: 'green'
-    },
-    {
-      titulo: 'Nuevo usuario registrado',
-      descripcion: 'Se ha creado una nueva cuenta.',
-      fecha: 'Hace 3 horas',
-      icono: 'fa-solid fa-user-plus',
-      tipo: 'purple'
-    }
-  ];
+      tipo: 'blue',
+    }))
+  );
 
-  // Calcula la altura de las barras tomando como referencia el valor máximo.
-  obtenerAltura(valor: number): string {
-    const maximo = 100;
-    return `${(valor / maximo) * 100}%`;
+  ngOnInit(): void {
+    this.estadisticasService.obtener().subscribe({
+      next: (datos) => {
+        this.datos.set(datos);
+        this.cargando.set(false);
+      },
+      error: (error) => {
+        console.error('Error al consultar las estadísticas:', error);
+        this.error.set(mensajeErrorCarga(error));
+        this.cargando.set(false);
+      },
+    });
   }
 
-  obtenerPorcentaje(valor: number): number {
-    return (valor / this.totalSolicitudes) * 100;
+  // Altura de cada barra respecto al máximo del eje.
+  obtenerAltura(valor: number): string {
+    return `${(valor / this.maximoGrafica()) * 100}%`;
   }
 }

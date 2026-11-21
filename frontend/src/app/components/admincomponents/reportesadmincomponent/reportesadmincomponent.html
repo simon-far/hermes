@@ -16,6 +16,11 @@
     </div>
   </section>
 
+  <div class="load-error" *ngIf="error()">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    {{ error() }}
+  </div>
+
   <!-- RESUMEN GENERAL -->
   <section class="stats-grid">
 
@@ -25,7 +30,7 @@
       </div>
       <div>
         <span class="stat-label">Total de usuarios</span>
-        <h2>{{ totalUsuarios }}</h2>
+        <h2>{{ totalUsuarios() }}</h2>
         <small>Usuarios registrados</small>
       </div>
     </article>
@@ -36,30 +41,30 @@
       </div>
       <div>
         <span class="stat-label">Total de solicitudes</span>
-        <h2>{{ totalSolicitudes }}</h2>
-        <small>Solicitudes registradas</small>
+        <h2>{{ totalSolicitudes() }}</h2>
+        <small>Traducciones realizadas</small>
       </div>
     </article>
 
     <article class="stat-card">
       <div class="stat-icon pending-icon">
-        <i class="fa-solid fa-clock"></i>
+        <i class="fa-solid fa-calendar-days"></i>
       </div>
       <div>
-        <span class="stat-label">Pendientes</span>
-        <h2>{{ solicitudesPendientes }}</h2>
-        <small>Requieren atención</small>
+        <span class="stat-label">Este mes</span>
+        <h2>{{ solicitudesMesActual() }}</h2>
+        <small>Solicitudes del mes en curso</small>
       </div>
     </article>
 
     <article class="stat-card">
       <div class="stat-icon completed-icon">
-        <i class="fa-solid fa-circle-check"></i>
+        <i class="fa-solid fa-code"></i>
       </div>
       <div>
-        <span class="stat-label">Atendidas</span>
-        <h2>{{ solicitudesAtendidas }}</h2>
-        <small>Solicitudes completadas</small>
+        <span class="stat-label">Lenguajes</span>
+        <h2>{{ totalLenguajes() }}</h2>
+        <small>Lenguajes de destino utilizados</small>
       </div>
     </article>
 
@@ -68,56 +73,37 @@
   <!-- GRÁFICOS -->
   <section class="charts-grid">
 
-    <!-- ESTADOS DE SOLICITUDES -->
+    <!-- SOLICITUDES POR LENGUAJE -->
     <article class="report-card">
       <div class="card-heading">
         <div>
-          <h3>Estado de las solicitudes</h3>
-          <p>Distribución según su estado actual</p>
+          <h3>Solicitudes por lenguaje</h3>
+          <p>Distribución según el lenguaje de destino</p>
         </div>
         <i class="fa-solid fa-chart-pie heading-icon"></i>
       </div>
 
       <div class="status-chart-container">
 
-        <div
-          class="donut-chart"
-          [style.background]="
-            'conic-gradient(' +
-            '#8b70ed 0% ' + porcentajePendientes + '%, ' +
-            '#4b9ce5 ' + porcentajePendientes + '% ' +
-            (porcentajePendientes + porcentajeEnProceso) + '%, ' +
-            '#36bd91 ' + (porcentajePendientes + porcentajeEnProceso) + '% 100%)'
-          "
-        >
+        <div class="donut-chart" [style.background]="fondoDonut()">
           <div class="donut-inner">
-            <strong>{{ totalSolicitudes }}</strong>
+            <strong>{{ totalSolicitudes() }}</strong>
             <span>Solicitudes</span>
           </div>
         </div>
 
         <div class="chart-legend">
-          <div class="legend-item">
-            <span class="legend-dot pending-dot"></span>
+          <div class="legend-item" *ngFor="let lenguaje of lenguajes()">
+            <span class="legend-dot" [style.background]="lenguaje.color"></span>
             <div>
-              <span>Pendientes</span>
-              <strong>{{ solicitudesPendientes }}</strong>
+              <span>{{ lenguaje.lenguaje }}</span>
+              <strong>{{ lenguaje.cantidad }}</strong>
             </div>
           </div>
 
-          <div class="legend-item">
-            <span class="legend-dot progress-dot"></span>
+          <div class="legend-item" *ngIf="!cargando() && lenguajes().length === 0">
             <div>
-              <span>En proceso</span>
-              <strong>{{ solicitudesEnProceso }}</strong>
-            </div>
-          </div>
-
-          <div class="legend-item">
-            <span class="legend-dot completed-dot"></span>
-            <div>
-              <span>Atendidas</span>
-              <strong>{{ solicitudesAtendidas }}</strong>
+              <span>Aún no hay solicitudes registradas.</span>
             </div>
           </div>
         </div>
@@ -137,14 +123,11 @@
 
       <div class="bar-chart">
         <div class="chart-y-labels">
-          <span>45</span>
-          <span>30</span>
-          <span>15</span>
-          <span>0</span>
+          <span *ngFor="let marca of marcasBarras()">{{ marca | number:'1.0-0' }}</span>
         </div>
 
         <div class="bars-container">
-          <div class="bar-column" *ngFor="let item of estadisticasMensuales">
+          <div class="bar-column" *ngFor="let item of estadisticasMensuales()">
             <span class="bar-value">{{ item.cantidad }}</span>
 
             <div class="bar-track">
@@ -182,11 +165,15 @@
 
         <div class="download-info">
           <h3>Reporte de usuarios</h3>
-          <p>Listado de usuarios, correos y fechas de registro.</p>
-          <span>{{ totalUsuarios }} registros disponibles</span>
+          <p>Listado de usuarios, correos, roles y fechas de registro.</p>
+          <span>{{ totalUsuarios() }} registros disponibles</span>
         </div>
 
-        <button class="download-button" (click)="descargarReporteUsuarios()">
+        <button
+          class="download-button"
+          (click)="descargarReporteUsuarios()"
+          [disabled]="cargando() || totalUsuarios() === 0"
+        >
           <i class="fa-solid fa-download"></i>
           Descargar CSV
         </button>
@@ -199,11 +186,15 @@
 
         <div class="download-info">
           <h3>Reporte de solicitudes</h3>
-          <p>Listado de solicitudes, usuarios asociados, fechas y estados de atención.</p>
-          <span>{{ totalSolicitudes }} registros disponibles</span>
+          <p>Listado de solicitudes con su usuario, lenguajes, modelo de IA y fecha.</p>
+          <span>{{ totalSolicitudes() }} registros disponibles</span>
         </div>
 
-        <button class="download-button" (click)="descargarReporteSolicitudes()">
+        <button
+          class="download-button"
+          (click)="descargarReporteSolicitudes()"
+          [disabled]="cargando() || totalSolicitudes() === 0"
+        >
           <i class="fa-solid fa-download"></i>
           Descargar CSV
         </button>

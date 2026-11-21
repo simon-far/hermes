@@ -5,6 +5,8 @@ export interface User {
   email: string;
   username: string;
   rol?: RolUsuario;
+  /** Fecha ISO de registro; null en usuarios creados antes de existir la columna. */
+  fechaRegistro?: string | null;
 }
 
 /** Datos que se envían al actualizar un usuario desde el panel de administración. */

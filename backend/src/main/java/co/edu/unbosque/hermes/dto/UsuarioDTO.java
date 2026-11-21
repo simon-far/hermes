@@ -1,5 +1,6 @@
 package co.edu.unbosque.hermes.dto;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 import co.edu.unbosque.hermes.entity.Usuario.Rol;
@@ -20,6 +21,8 @@ public class UsuarioDTO {
 	private String username;
 	private String password;
 	private Rol rol;
+	/** Fecha de registro; la genera el servidor al crear el usuario. */
+	private LocalDateTime fechaRegistro;
 
 	public UsuarioDTO() {
 		// TODO Auto-generated constructor stub
@@ -128,6 +131,25 @@ public class UsuarioDTO {
 	 */
 	public void setRol(Rol rol) {
 		this.rol = rol;
+	}
+
+	/**
+	 * Obtiene la fecha de registro del usuario.
+	 *
+	 * @return Fecha de registro, o {@code null} si el usuario es anterior a esta
+	 *         columna.
+	 */
+	public LocalDateTime getFechaRegistro() {
+		return fechaRegistro;
+	}
+
+	/**
+	 * Establece la fecha de registro del usuario.
+	 *
+	 * @param fechaRegistro Fecha de registro a asignar.
+	 */
+	public void setFechaRegistro(LocalDateTime fechaRegistro) {
+		this.fechaRegistro = fechaRegistro;
 	}
 
 	@Override

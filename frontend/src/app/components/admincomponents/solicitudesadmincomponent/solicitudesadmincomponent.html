@@ -8,7 +8,7 @@
     <div>
       <span class="section-eyebrow">ADMINISTRACIÓN</span>
       <h1>Gestión de solicitudes</h1>
-      <p>Consulta y administra las solicitudes enviadas por los usuarios.</p>
+      <p>Consulta las solicitudes de traducción realizadas por los usuarios.</p>
     </div>
 
     <div class="heading-status">
@@ -16,6 +16,11 @@
       <span>Centro de solicitudes</span>
     </div>
   </section>
+
+  <div class="load-error" *ngIf="error()">
+    <i class="fa-solid fa-triangle-exclamation"></i>
+    {{ error() }}
+  </div>
 
   <!-- Estadísticas -->
   <section class="requests-statistics">
@@ -25,38 +30,38 @@
         <i class="fa-solid fa-file-lines"></i>
       </div>
       <div>
-        <h2>{{ solicitudes.length }}</h2>
+        <h2>{{ solicitudes().length }}</h2>
         <p>Total de solicitudes</p>
       </div>
     </article>
 
     <article class="stat-card">
       <div class="stat-icon orange">
-        <i class="fa-solid fa-clock"></i>
+        <i class="fa-solid fa-calendar-days"></i>
       </div>
       <div>
-        <h2>{{ totalPendientes }}</h2>
-        <p>Pendientes</p>
+        <h2>{{ totalMesActual() }}</h2>
+        <p>Este mes</p>
       </div>
     </article>
 
     <article class="stat-card">
       <div class="stat-icon blue">
-        <i class="fa-solid fa-spinner"></i>
+        <i class="fa-solid fa-users"></i>
       </div>
       <div>
-        <h2>{{ totalEnProceso }}</h2>
-        <p>En proceso</p>
+        <h2>{{ totalUsuariosConSolicitudes() }}</h2>
+        <p>Usuarios con solicitudes</p>
       </div>
     </article>
 
     <article class="stat-card">
       <div class="stat-icon green">
-        <i class="fa-solid fa-circle-check"></i>
+        <i class="fa-solid fa-code"></i>
       </div>
       <div>
-        <h2>{{ totalAtendidas }}</h2>
-        <p>Atendidas</p>
+        <h2>{{ lenguajesDisponibles().length }}</h2>
+        <p>Lenguajes de destino</p>
       </div>
     </article>
 
@@ -85,18 +90,18 @@
         <input
           type="text"
           [(ngModel)]="busqueda"
-          placeholder="Buscar por usuario o tipo de solicitud..."
+          placeholder="Buscar por usuario, correo, lenguaje o modelo..."
         >
       </div>
 
       <div class="filter-box">
         <i class="fa-solid fa-filter"></i>
 
-        <select [(ngModel)]="filtroEstado">
-          <option value="Todas">Todos los estados</option>
-          <option value="Pendiente">Pendientes</option>
-          <option value="En proceso">En proceso</option>
-          <option value="Atendida">Atendidas</option>
+        <select [(ngModel)]="filtroLenguaje">
+          <option value="Todos">Todos los lenguajes</option>
+          <option *ngFor="let lenguaje of lenguajesDisponibles()" [value]="lenguaje">
+            {{ lenguaje }}
+          </option>
         </select>
       </div>
 
@@ -112,7 +117,7 @@
           <th>SOLICITUD</th>
           <th>USUARIO</th>
           <th>FECHA</th>
-          <th>ESTADO</th>
+          <th>MODELO</th>
           <th>ACCIÓN</th>
         </tr>
         </thead>
@@ -124,7 +129,7 @@
           <td>
             <div class="request-information">
               <span class="request-id">#{{ solicitud.id }}</span>
-              <h3>{{ solicitud.tipo }}</h3>
+              <h3>{{ textoLenguajes(solicitud) }}</h3>
             </div>
           </td>
 
@@ -136,16 +141,12 @@
           </td>
 
           <td class="request-date">
-            {{ solicitud.fecha }}
+            {{ formatearFecha(solicitud.fecha) }}
           </td>
 
           <td>
-              <span
-                class="request-status"
-                [ngClass]="obtenerClaseEstado(solicitud.estado)"
-              >
-                <span class="status-dot"></span>
-                {{ solicitud.estado }}
+              <span class="request-status processing">
+                {{ solicitud.modelo || 'Sin especificar' }}
               </span>
           </td>
 
@@ -158,7 +159,14 @@
 
         </tr>
 
-        <tr *ngIf="solicitudesFiltradas.length === 0">
+        <tr *ngIf="cargando()">
+          <td colspan="5" class="empty-state">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <h3>Cargando solicitudes...</h3>
+          </td>
+        </tr>
+
+        <tr *ngIf="!cargando() && solicitudesFiltradas.length === 0">
           <td colspan="5" class="empty-state">
             <i class="fa-solid fa-folder-open"></i>
             <h3>No se encontraron solicitudes</h3>
