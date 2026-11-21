@@ -1,7 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Solicitud } from '../../../models/admin/solicitud.model';
+import { Solicitud } from '../../../models/solicitud.model';
 import { EstadisticasService } from '../../../services/estadisticas.service';
-import { esDelMesActual, formatearFecha, mensajeErrorCarga, textoLenguajes } from '../admin-formato';
 
 @Component({
   selector: 'app-solicitudesadmincomponent',
@@ -21,7 +20,9 @@ export class Solicitudesadmincomponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
-  readonly totalMesActual = computed(() => this.solicitudes().filter((s) => esDelMesActual(s.fecha)).length);
+  readonly totalMesActual = computed(
+    () => this.solicitudes().filter((s) => this.esDelMesActual(s.fecha)).length
+  );
 
   readonly totalUsuariosConSolicitudes = computed(
     () => new Set(this.solicitudes().map((s) => s.correo)).size
@@ -32,9 +33,6 @@ export class Solicitudesadmincomponent implements OnInit {
     [...new Set(this.solicitudes().map((s) => this.lenguajeDestino(s)))].sort((a, b) => a.localeCompare(b))
   );
 
-  readonly textoLenguajes = textoLenguajes;
-  readonly formatearFecha = formatearFecha;
-
   ngOnInit(): void {
     this.estadisticasService.solicitudes().subscribe({
       next: (respuesta) => {
@@ -43,7 +41,7 @@ export class Solicitudesadmincomponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al consultar las solicitudes:', error);
-        this.error.set(mensajeErrorCarga(error));
+        this.error.set(this.estadisticasService.mensajeErrorCarga(error));
         this.cargando.set(false);
       },
     });
@@ -55,7 +53,7 @@ export class Solicitudesadmincomponent implements OnInit {
     return this.solicitudes().filter((solicitud) => {
       const coincideBusqueda =
         !termino ||
-        [solicitud.usuario, solicitud.correo, textoLenguajes(solicitud), solicitud.modelo]
+        [solicitud.usuario, solicitud.correo, this.textoLenguajes(solicitud), solicitud.modelo]
           .some((campo) => campo?.toLowerCase().includes(termino));
 
       const coincideLenguaje =
@@ -66,7 +64,24 @@ export class Solicitudesadmincomponent implements OnInit {
     });
   }
 
+  /** 'Java → Python' (lo usa la tabla y la búsqueda). */
+  textoLenguajes(solicitud: Solicitud): string {
+    return this.estadisticasService.textoLenguajes(solicitud);
+  }
+
+  /** Fecha en formato dd/mm/aaaa para la tabla. */
+  formatearFecha(fecha: string | null): string {
+    return this.estadisticasService.formatearFecha(fecha);
+  }
+
   private lenguajeDestino(solicitud: Solicitud): string {
     return solicitud.lenguajeDestino?.trim() || 'Sin especificar';
+  }
+
+  /** Indica si la fecha cae en el mes en curso. */
+  private esDelMesActual(fecha: string | null): boolean {
+    const d = this.estadisticasService.aFecha(fecha);
+    const ahora = new Date();
+    return !!d && d.getFullYear() === ahora.getFullYear() && d.getMonth() === ahora.getMonth();
   }
 }

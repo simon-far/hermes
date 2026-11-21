@@ -1,4 +1,0 @@
-@if (auth.user(); as user) {
-  <span class="user muted">{{ user.fullName }} · {{ roleLabels[user.role] }}</span>
-}
-<button class="btn btn-ghost" type="button" (click)="auth.logout()">Cerrar sesión</button>

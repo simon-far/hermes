@@ -6,4 +6,3 @@
 .counter { font-size: 0.8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .counter.over { color: var(--err-fg); font-weight: 600; }
 .editor-host { min-width: 0; }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

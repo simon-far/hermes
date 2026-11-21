@@ -3,11 +3,11 @@ import { Component, HostListener, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
-import { LanguageCode } from '../../../models/ai/ai.models';
+import { LanguageCode } from '../../../models/ai.models';
 import { TraduccionModel } from '../../../models/traduccion.model';
 import { TraduccionService } from '../../../services/traduccion.service';
 import { LoginService } from '../../../services/login.service';
-import { ModeloIA } from '../../../models/ai/modeloia.model';
+import { ModeloIA } from '../../../models/modeloia.model';
 
 // Bootstrap se carga globalmente desde index.html (bootstrap.bundle.min.js).
 declare const bootstrap: any;

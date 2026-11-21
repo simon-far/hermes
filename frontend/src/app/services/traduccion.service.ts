@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { TraduccionModel } from '../models/traduccion.model';
 import { AnswertraduccionModel } from '../models/answertraduccion.model';
 import { LoginService } from './login.service';
@@ -10,12 +10,9 @@ export class TraduccionService {
   private readonly loginServicio = inject(LoginService);
   private readonly urlbase = 'http://localhost:8080';
 
-  /** Arma el header "Authorization: Bearer <token>" con el token guardado al iniciar sesión. */
-  private obtenerHeaders(): HttpHeaders {
-    const token = this.loginServicio.obtenerToken();
-    return new HttpHeaders({
-      Authorization: `Bearer ${token}`,
-    });
+  /** Header "Authorization: Bearer <token>" de la sesión actual. */
+  private obtenerHeaders() {
+    return this.loginServicio.obtenerHeaders();
   }
 
   /** Traduce usando el endpoint del modelo indicado (ej. 'cohere', 'nemotron', 'qwen'). */

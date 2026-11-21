@@ -1,19 +1,11 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { EstadisticaMensual } from '../../../models/admin/reportes.models';
-import { Estadisticas } from '../../../models/admin/estadisticas.models';
-import { Solicitud } from '../../../models/admin/solicitud.model';
+import { EstadisticaMensual } from '../../../models/reportes.models';
+import { Estadisticas } from '../../../models/estadisticas.models';
+import { Solicitud } from '../../../models/solicitud.model';
 import { User } from '../../../models/usuarios.model';
 import { EstadisticasService } from '../../../services/estadisticas.service';
 import { UsuarioService } from '../../../services/usuario.service';
-import {
-  etiquetaMes,
-  formatearFecha,
-  lenguajesOrdenados,
-  marcasEje,
-  maximoEje,
-  mensajeErrorCarga,
-} from '../admin-formato';
 
 /** Divisiones del eje Y del gráfico mensual (4 marcas). */
 const DIVISIONES_EJE = 3;
@@ -45,7 +37,9 @@ export class Reportesadmincomponent implements OnInit {
   );
 
   // Gráfico circular por lenguaje de destino
-  readonly lenguajes = computed(() => lenguajesOrdenados(this.estadisticas()?.traduccionesPorLenguaje));
+  readonly lenguajes = computed(() =>
+    this.estadisticasService.lenguajesOrdenados(this.estadisticas()?.traduccionesPorLenguaje)
+  );
 
   readonly fondoDonut = computed(() => {
     const lenguajes = this.lenguajes();
@@ -63,16 +57,18 @@ export class Reportesadmincomponent implements OnInit {
   // Gráfico de barras mensual
   readonly estadisticasMensuales = computed<EstadisticaMensual[]>(() =>
     (this.estadisticas()?.actividadMensual ?? []).map((a) => ({
-      mes: etiquetaMes(a.periodo),
+      mes: this.estadisticasService.etiquetaMes(a.periodo),
       cantidad: a.traducciones,
     }))
   );
 
   private readonly maximoBarras = computed(() =>
-    maximoEje(this.estadisticasMensuales().map((e) => e.cantidad), DIVISIONES_EJE)
+    this.estadisticasService.maximoEje(this.estadisticasMensuales().map((e) => e.cantidad), DIVISIONES_EJE)
   );
 
-  readonly marcasBarras = computed(() => marcasEje(this.maximoBarras(), DIVISIONES_EJE));
+  readonly marcasBarras = computed(() =>
+    this.estadisticasService.marcasEje(this.maximoBarras(), DIVISIONES_EJE)
+  );
 
   ngOnInit(): void {
     forkJoin({
@@ -89,7 +85,7 @@ export class Reportesadmincomponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al consultar los reportes:', error);
-        this.error.set(mensajeErrorCarga(error));
+        this.error.set(this.estadisticasService.mensajeErrorCarga(error));
         this.cargando.set(false);
       },
     });
@@ -109,7 +105,7 @@ export class Reportesadmincomponent implements OnInit {
       usuario.username ?? '',
       usuario.email ?? '',
       usuario.rol ?? '',
-      formatearFecha(usuario.fechaRegistro),
+      this.estadisticasService.formatearFecha(usuario.fechaRegistro),
     ]);
 
     this.descargarCSV('reporte_usuarios.csv', encabezados, filas);
@@ -126,7 +122,7 @@ export class Reportesadmincomponent implements OnInit {
       solicitud.lenguajeOrigen ?? '',
       solicitud.lenguajeDestino ?? '',
       solicitud.modelo ?? '',
-      formatearFecha(solicitud.fecha),
+      this.estadisticasService.formatearFecha(solicitud.fecha),
     ]);
 
     this.descargarCSV('reporte_solicitudes.csv', encabezados, filas);

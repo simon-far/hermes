@@ -8,17 +8,13 @@ import {
   inject,
   input,
   model,
-  output,
-  signal,
   viewChild,
 } from '@angular/core';
-import type { Compartment, Extension } from '@codemirror/state';
+import type { Extension } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
-import { LanguageCode } from '../../../models/ai/ai.models';
-import { LoadedSource } from '../../../models/files/files.models';
-import { CodeMirrorKit } from '../../../models/editor/codemirror.models';
-import { LanguageService } from '../../../services/languages/language.service';
-import { SourceFileService } from '../../../services/files/source-file.service';
+import { LanguageCode } from '../../../models/ai.models';
+import { CodeMirrorKit } from '../../../models/codemirror.models';
+import { LanguageService } from '../../../services/language.service';
 
 
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace";
@@ -34,19 +30,12 @@ const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 
 export class Codeeditorcomponent implements OnDestroy {
 
   private readonly languageService = inject(LanguageService);
-  private readonly sourceFileService = inject(SourceFileService);
 
   readonly value = model('');
   readonly language = input.required<LanguageCode>();
   readonly label = input('Código');
   readonly readOnly = input(false);
-  readonly allowUpload = input(false);
   readonly maxChars = input(10_000);
-
-  readonly languageDetected = output<LanguageCode>();
-
-  protected readonly uploadError = signal<string | null>(null);
-  protected readonly accept = this.languageService.acceptedExtensions;
 
   private readonly host = viewChild.required<ElementRef<HTMLDivElement>>('host');
   private kit?: CodeMirrorKit;
@@ -82,22 +71,6 @@ export class Codeeditorcomponent implements OnDestroy {
   ngOnDestroy(): void {
     this.destroyed = true;
     this.view?.destroy();
-  }
-
-  protected async onFile(input: HTMLInputElement): Promise<void> {
-    const file = input.files?.[0];
-    input.value = '';
-    if (!file) {
-      return;
-    }
-    try {
-      const loaded: LoadedSource = await this.sourceFileService.read(file, this.maxChars());
-      this.uploadError.set(null);
-      this.value.set(loaded.text);
-      this.languageDetected.emit(loaded.language);
-    } catch (err) {
-      this.uploadError.set(err instanceof Error ? err.message : 'No se pudo leer el archivo.');
-    }
   }
 
   private async createView(): Promise<void> {
