@@ -13,6 +13,8 @@ public class ChatResponseDTO {
 	private List<Choice> choices;
 	private int statuscode;
 	private String retryAfter;
+	/** Error devuelto por OpenRouter cuando la petición falla ({"error": {...}}). */
+	private ErrorInfo error;
 
 	/** Constructor vacio */
 	public ChatResponseDTO() {
@@ -45,6 +47,33 @@ public class ChatResponseDTO {
 			return null;
 		}
 		return choices.get(0).getMessage().getContent();
+	}
+
+	/**
+	 * Devuelve el mensaje de error que envió OpenRouter, si la petición falló.
+	 *
+	 * @return Texto del error (en inglés, tal como lo envía el proveedor), o
+	 *         {@code null} si no hubo error.
+	 */
+	public String getMensajeError() {
+		return error != null ? error.message : null;
+	}
+
+	/**
+	 * Error con el formato que usa OpenRouter: {@code {"message": "...", "code": 404}}.
+	 * Lo rellena Gson automáticamente.
+	 */
+	public static class ErrorInfo {
+		private String message;
+		private int code;
+
+		public String getMessage() {
+			return message;
+		}
+
+		public int getCode() {
+			return code;
+		}
 	}
 
 	/**

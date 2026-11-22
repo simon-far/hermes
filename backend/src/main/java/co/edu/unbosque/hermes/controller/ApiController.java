@@ -19,20 +19,20 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @Transactional
-@Tag(name = "Api IA", description = "Endpoints para Cohere IA, Nemotron IA y Particle IA")
+@Tag(name = "Api IA", description = "Endpoints para Gemma IA, Nemotron IA y Particle IA")
 public class ApiController {
 
 	@Autowired
 	private TraduccionService traduccionService;
 
-	/** Traducción solo con Cohere. Ruta: POST /cohere/traduccion */
-	@PostMapping("/cohere/traduccion")
-	ResponseEntity<TraduccionDTO> traduccion(@RequestBody TraduccionRequestDTO req,
+	/** Traducción solo con Google Gemma 4 31B. Ruta: POST /gemma/traduccion */
+	@PostMapping("/gemma/traduccion")
+	ResponseEntity<TraduccionDTO> traduccionGemma(@RequestBody TraduccionRequestDTO req,
 			@AuthenticationPrincipal Usuario user) {
-		RespuestaIADTO respuesta = ExternalHTTPRequestHandler.traducir(req, ExternalHTTPRequestHandler.COHERE_URL,
-				ExternalHTTPRequestHandler.MODEL, ExternalHTTPRequestHandler.getApiKey());
+		RespuestaIADTO respuesta = ExternalHTTPRequestHandler.traducir(req, ExternalHTTPRequestHandler.GEMMA_URL,
+				ExternalHTTPRequestHandler.GEMMA_MODEL, ExternalHTTPRequestHandler.getApiKeyGemma());
 		return new ResponseEntity<TraduccionDTO>(
-				guardarTraduccion(req, user, ExternalHTTPRequestHandler.MODEL, respuesta), HttpStatus.ACCEPTED);
+				guardarTraduccion(req, user, ExternalHTTPRequestHandler.GEMMA_MODEL, respuesta), HttpStatus.ACCEPTED);
 	}
 
 	/** Traducción solo con Nemotron. Ruta: POST /nemotron/traduccion */

@@ -47,7 +47,7 @@ export class Traductorcomponent {
 
   /** Catálogo de modelos de IA disponibles para ejecutar la traducción. */
   readonly modelos: ModeloIA[] = [
-    { endpoint: 'cohere', nombre: 'Cohere North Mini Code', descripcion: 'Rápido y ligero' },
+    { endpoint: 'gemma', nombre: 'Google Gemma 4 31B', descripcion: 'Rápido y versátil' },
     { endpoint: 'nemotron', nombre: 'NVIDIA Nemotron 3 Ultra', descripcion: 'Mayor capacidad de razonamiento' },
     { endpoint: 'particle', nombre: 'Particle Coder', descripcion: 'Especializado en código' },
   ];
@@ -181,7 +181,8 @@ export class Traductorcomponent {
    */
   private mostrarMensaje(mensaje: string, tipo: 'exito' | 'error'): void {
     this.snackBar.open(mensaje, 'Cerrar', {
-      duration: 4000,
+      // Los errores duran más para que alcance a leerse la explicación completa.
+      duration: tipo === 'error' ? 8000 : 4000,
       horizontalPosition: 'right',
       verticalPosition: 'top',
       panelClass: tipo === 'exito' ? ['snack-exito'] : ['snack-error'],
@@ -197,17 +198,28 @@ export class Traductorcomponent {
   private obtenerMensajeError(error: HttpErrorResponse): string {
     switch (error.status) {
       case 0:
-        return 'No hay conexión con el servidor.';
+        return 'No hay conexión con el servidor o el servicio de IA no respondió. Intenta de nuevo en unos minutos.';
       case 401:
       case 403:
         // El token no es válido o expiró: se cierra la sesión local para que vuelva a entrar.
         this.loginServicio.cerrarSesion();
         this.abrirModalLogin();
         return 'Tu sesión expiró. Inicia sesión de nuevo.';
+    }
+
+    // El backend explica qué pasó con el modelo de IA en el campo `message`
+    // (modelo no disponible, saturado, sin saldo, tiempo agotado...).
+    const mensajeBackend = error.error?.message;
+    if (typeof mensajeBackend === 'string' && mensajeBackend.trim()) {
+      return mensajeBackend;
+    }
+
+    switch (error.status) {
       case 502:
-        return 'El servicio de IA no respondió correctamente. Intenta de nuevo.';
+      case 504:
+        return 'El servicio de IA no respondió correctamente. Intenta de nuevo o elige otro modelo.';
       case 503:
-        return 'El modelo de IA está saturado. Intenta de nuevo en unos minutos.';
+        return 'El modelo de IA no está disponible en este momento. Intenta de nuevo o elige otro modelo.';
       default:
         return 'No fue posible traducir el código. Intenta de nuevo.';
     }

@@ -26,7 +26,7 @@ export class TraduccionService {
   /**
    * Traduce un fragmento de código utilizando el endpoint del modelo de IA indicado.
    * @param datos Código fuente y lenguajes de origen y destino.
-   * @param endpoint Segmento de ruta del modelo (ej. `'cohere'`, `'nemotron'`, `'particle'`).
+   * @param endpoint Segmento de ruta del modelo (ej. `'gemma'`, `'nemotron'`, `'particle'`).
    * @returns Observable con el código traducido, sugerencias y metadatos del registro.
    */
   traducir(datos: TraduccionModel, endpoint: string) {
@@ -55,13 +55,13 @@ export class TraduccionService {
   }
 
   /**
-   * Traduce código directamente mediante el modelo Cohere.
+   * Traduce código directamente mediante el modelo Google Gemma 4 31B.
    * @param datos Código fuente y lenguajes de origen y destino.
    * @returns Observable con la respuesta de traducción.
    */
-  traducirCohere(datos: TraduccionModel) {
+  traducirGemma(datos: TraduccionModel) {
     return this.cliente.post<AnswertraduccionModel>(
-      `${this.urlbase}/cohere/traduccion`,
+      `${this.urlbase}/gemma/traduccion`,
       datos,
       { headers: this.obtenerHeaders() }
     );

@@ -61,7 +61,12 @@ public class TraduccionService implements CRUDOperation<TraduccionDTO> {
 		Traduccion entity = mapper.map(dato, Traduccion.class);
 		entity.setCodigoOriginal(cifrar(dato.getCodigoOriginal()));
 		entity.setCodigoTraducido(cifrar(dato.getCodigoTraducido()));
-		return aDtoDescifrado(repo.save(entity));
+		// Una mejora por línea (igual que actualizarPorId), para poder leerlas de nuevo como lista.
+		entity.setMejoras(mejorasATexto(dato.getMejoras()));
+		TraduccionDTO guardado = aDtoDescifrado(repo.save(entity));
+		// Se devuelve la lista original tal como llegó de la IA.
+		guardado.setMejoras(dato.getMejoras());
+		return guardado;
 	}
 
 	/**

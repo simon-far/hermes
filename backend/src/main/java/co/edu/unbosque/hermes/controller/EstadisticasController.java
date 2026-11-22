@@ -4,11 +4,13 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import co.edu.unbosque.hermes.dto.EstadisticasDTO;
 import co.edu.unbosque.hermes.dto.SolicitudAdminDTO;
+import co.edu.unbosque.hermes.dto.SolicitudDetalleDTO;
 import co.edu.unbosque.hermes.service.EstadisticasService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -47,5 +49,12 @@ public class EstadisticasController {
 	@GetMapping("/solicitudes")
 	public ResponseEntity<List<SolicitudAdminDTO>> obtenerSolicitudes() {
 		return ResponseEntity.ok(estadisticaServ.obtenerSolicitudes());
+	}
+
+	@Operation(summary = "Detalle de una solicitud", description = "Devuelve una traducción con su usuario, el código original, el código traducido y las mejoras sugeridas por la IA.")
+	@GetMapping("/solicitudes/{id}")
+	public ResponseEntity<SolicitudDetalleDTO> obtenerDetalleSolicitud(@PathVariable Long id) {
+		return estadisticaServ.obtenerDetalleSolicitud(id).map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.notFound().build());
 	}
 }

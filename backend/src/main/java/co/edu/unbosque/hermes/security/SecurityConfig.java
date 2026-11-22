@@ -70,7 +70,7 @@ public class SecurityConfig {
 						.requestMatchers("/user/**").hasRole("ADMIN")
 						// Cubre /estadisticas y /estadisticas/solicitudes (panel de administración)
 						.requestMatchers("/estadisticas", "/estadisticas/**").hasRole("ADMIN")
-						.requestMatchers("/cohere/**", "/nemotron/**", "/particle/**").hasAnyRole("USER", "ADMIN")
+						.requestMatchers("/gemma/**", "/nemotron/**", "/particle/**").hasAnyRole("USER", "ADMIN")
 						.anyRequest().authenticated())
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authenticationProvider(authenticationProvider())

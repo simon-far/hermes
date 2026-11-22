@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Estadisticas, LenguajeConteo } from '../models/estadisticas.models';
-import { Solicitud } from '../models/solicitud.model';
+import { Solicitud, SolicitudDetalle } from '../models/solicitud.model';
 import { LoginService } from './login.service';
 
 const MESES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -39,6 +39,17 @@ export class EstadisticasService {
     });
   }
 
+  /**
+   * Detalle completo de una solicitud: datos del usuario, código original,
+   * código traducido y mejoras sugeridas por la IA.
+   * @param id Identificador de la solicitud.
+   */
+  detalleSolicitud(id: number) {
+    return this.cliente.get<SolicitudDetalle>(`${this.urlbase}/solicitudes/${id}`, {
+      headers: this.loginServicio.obtenerHeaders(),
+    });
+  }
+
   // ---------- Fechas y textos ----------
 
   /** Convierte la fecha ISO del backend en Date, o null si no hay o no es válida. */
@@ -53,6 +64,19 @@ export class EstadisticasService {
     const d = this.aFecha(fecha);
     if (!d) return 'Sin fecha';
     return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  /** Fecha y hora en formato dd/mm/aaaa, hh:mm a. m./p. m., o 'Sin fecha' si no hay. */
+  formatearFechaHora(fecha: string | null | undefined): string {
+    const d = this.aFecha(fecha);
+    if (!d) return 'Sin fecha';
+    return d.toLocaleString('es-CO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   }
 
   /** Convierte 'yyyy-MM' en la abreviatura del mes, por ejemplo '2026-11' → 'Nov'. */

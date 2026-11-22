@@ -9,6 +9,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 
 import java.time.Duration;
 import java.util.List;
@@ -39,7 +40,7 @@ import co.edu.unbosque.hermes.exception.IAServiceException;
  * Proporciona métodos estáticos para la ejecución de peticiones HTTP (GET,
  * POST, PUT, DELETE), la construcción de cuerpos de solicitud para traducción
  * de código, el formateo de JSON y el procesamiento de respuestas estructuradas
- * devueltas por los modelos de lenguaje (Cohere, Nemotron, Particle).
+ * devueltas por los modelos de lenguaje (Gemma, Nemotron, Particle).
  * </p>
  * <p>
  * Las llaves de OpenRouter se leen de {@code application.properties} (o de
@@ -58,18 +59,27 @@ public class ExternalHTTPRequestHandler {
 	private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2)
 			.connectTimeout(Duration.ofSeconds(10)).build();
 
-	/** URL base de la API de OpenRouter para la finalización de chats. */
-	public static final String COHERE_URL = "https://openrouter.ai/api/v1/chat/completions";
+	/**
+	 * Tiempo máximo de espera de la respuesta del modelo. Es menor a los 100 s que
+	 * Cloudflare espera antes de cortar la conexión, para poder responder al
+	 * usuario con un mensaje claro.
+	 */
+	private static final Duration TIEMPO_MAXIMO_RESPUESTA = Duration.ofSeconds(90);
 
+	/** URL base de la API de OpenRouter para la finalización de chats. */
+	public static final String OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+	/** URL para el modelo Gemma (apunta al endpoint general de OpenRouter). */
+	public static final String GEMMA_URL = OPENROUTER_URL;
 
 	/** URL para el modelo Nemotron (apunta al endpoint general de OpenRouter). */
-	public static final String NEMOTRON_URL = COHERE_URL;
+	public static final String NEMOTRON_URL = OPENROUTER_URL;
 
 	/** URL para el modelo Particle (apunta al endpoint general de OpenRouter). */
-	public static final String PARTICLE_URL = COHERE_URL;
+	public static final String PARTICLE_URL = OPENROUTER_URL;
 
-	/** Identificador del modelo Cohere utilizado por defecto. */
-	public static final String MODEL = "cohere/north-mini-code:free";
+	/** Identificador del modelo Google Gemma 4 31B (modelo por defecto). */
+	public static final String GEMMA_MODEL = "google/gemma-4-31b-it:free";
 
 	/** Identificador del modelo NVIDIA Nemotron. */
 	public static final String NEMOTRON_MODEL = "nvidia/nemotron-3-ultra-550b-a55b:free";
@@ -78,10 +88,10 @@ public class ExternalHTTPRequestHandler {
 	public static final String PARTICLE_MODEL = "particle-ai/particle-1:free";
 
 	/**
-	 * Llave de API para Cohere. Spring la asigna al arrancar desde la propiedad
-	 * {@code OPENROUTER_API_KEY_COHERE_MINI_CODE}.
+	 * Llave de API para Gemma. Spring la asigna al arrancar desde la propiedad
+	 * {@code OPENROUTER_API_KEY_GEMMA}.
 	 */
-	private static String API_KEY_COHERE;
+	private static String API_KEY_GEMMA;
 
 	/**
 	 * Llave de API para Nemotron. Spring la asigna al arrancar desde la propiedad
@@ -96,13 +106,13 @@ public class ExternalHTTPRequestHandler {
 	private static String API_KEY_PARTICLE;
 
 	/**
-	 * Recibe la llave de Cohere desde la configuración al arrancar la aplicación.
+	 * Recibe la llave de Gemma desde la configuración al arrancar la aplicación.
 	 *
-	 * @param llave Valor de la propiedad {@code OPENROUTER_API_KEY_COHERE_MINI_CODE}.
+	 * @param llave Valor de la propiedad {@code OPENROUTER_API_KEY_GEMMA}.
 	 */
-	@Value("${OPENROUTER_API_KEY_COHERE_MINI_CODE}")
-	public void setApiKeyCohere(String llave) {
-		API_KEY_COHERE = llave;
+	@Value("${OPENROUTER_API_KEY_GEMMA}")
+	public void setApiKeyGemma(String llave) {
+		API_KEY_GEMMA = llave;
 	}
 
 	/**
@@ -126,12 +136,12 @@ public class ExternalHTTPRequestHandler {
 	}
 
 	/**
-	 * Obtiene la llave de API configurada para el servicio de Cohere.
+	 * Obtiene la llave de API configurada para el modelo Gemma.
 	 * 
 	 * @return Cadena con la API Key.
 	 */
-	public static String getApiKey() {
-		return API_KEY_COHERE;
+	public static String getApiKeyGemma() {
+		return API_KEY_GEMMA;
 	}
 
 	/**
@@ -177,7 +187,7 @@ public class ExternalHTTPRequestHandler {
 			""";
 
 	/**
-	 * Envía una petición POST utilizando por defecto la API Key de Cohere y
+	 * Envía una petición POST utilizando por defecto la API Key de Gemma y
 	 * convierte la respuesta a un {@link ChatResponseDTO}.
 	 * 
 	 * @param url  URL del endpoint de destino.
@@ -185,7 +195,7 @@ public class ExternalHTTPRequestHandler {
 	 * @return Objeto {@link ChatResponseDTO} con la respuesta mapeada.
 	 */
 	public static ChatResponseDTO doPostAndConvertToDto(String url, String json) {
-		return doPostAndConvertToDto(url, json, API_KEY_COHERE);
+		return doPostAndConvertToDto(url, json, API_KEY_GEMMA);
 	}
 
 	/**
@@ -202,11 +212,14 @@ public class ExternalHTTPRequestHandler {
 	public static ChatResponseDTO doPostAndConvertToDto(String url, String json, String apiKey) {
 		HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(json))
 				.uri(URI.create(url)).header("Content-Type", "application/json")
-				.setHeader("Authorization", "Bearer " + apiKey).build();
+				.setHeader("Authorization", "Bearer " + apiKey).timeout(TIEMPO_MAXIMO_RESPUESTA).build();
 
 		HttpResponse<String> response = null;
 		try {
 			response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
+		} catch (HttpTimeoutException e) {
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"El modelo de IA tardó demasiado en responder. Intenta de nuevo o elige otro modelo.", null, e);
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {
@@ -214,8 +227,8 @@ public class ExternalHTTPRequestHandler {
 			e.printStackTrace();
 		}
 		if (response == null) {
-			throw new IAServiceException(HttpStatus.BAD_GATEWAY, "No se pudo conectar con el proveedor de IA.", null,
-					null);
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"No se pudo conectar con el proveedor de IA. Intenta de nuevo en unos minutos.", null, null);
 		}
 		String body = response.body();
 		ChatResponseDTO chat = null;
@@ -245,7 +258,7 @@ public class ExternalHTTPRequestHandler {
 	public static String doPostAndParse(String url, String json) {
 		HttpRequest request = HttpRequest.newBuilder().POST(HttpRequest.BodyPublishers.ofString(json))
 				.uri(URI.create(url)).header("Content-Type", "application/json")
-				.setHeader("Authorization", "Bearer " + API_KEY_COHERE).build();
+				.setHeader("Authorization", "Bearer " + API_KEY_GEMMA).build();
 
 		HttpResponse<String> response = null;
 		try {
@@ -272,7 +285,7 @@ public class ExternalHTTPRequestHandler {
 	 */
 	public static String doGetWithHeaders(String url) {
 		HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(url))
-				.header("Content-Type", "application/json").setHeader("Authorization", "Bearer " + API_KEY_COHERE).build();
+				.header("Content-Type", "application/json").setHeader("Authorization", "Bearer " + API_KEY_GEMMA).build();
 
 		HttpResponse<String> response = null;
 		try {
@@ -411,7 +424,7 @@ public class ExternalHTTPRequestHandler {
 	 * @return Cadena JSON lista para ser enviada en la solicitud HTTP.
 	 */
 	public static String crearBodyTraduccion(TraduccionRequestDTO req) {
-		return crearBodyTraduccion(req, MODEL);
+		return crearBodyTraduccion(req, GEMMA_MODEL);
 	}
 
 	/**
@@ -511,27 +524,80 @@ public class ExternalHTTPRequestHandler {
 	 * @param apiKey Llave de API para autenticación.
 	 * @return Objeto {@link RespuestaIADTO} con el código traducido, lenguaje y
 	 *         mejoras.
-	 * @throws IAServiceException si falta la API Key, si el modelo está saturado o
-	 *                            si ocurre un error de pasarela.
+	 * @throws IAServiceException si falta la API Key o el proveedor de IA responde
+	 *                            con error; el mensaje explica al usuario qué pasó.
 	 */
 	public static RespuestaIADTO traducir(TraduccionRequestDTO req, String url, String model, String apiKey) {
+		String nombreModelo = nombreLegible(model);
 		if (apiKey == null || apiKey.isBlank()) {
-			throw new IAServiceException(HttpStatus.INTERNAL_SERVER_ERROR,
-					"Falta la api key del modelo " + model + " (variable de entorno).", null, null);
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"El modelo " + nombreModelo + " no está configurado en el servidor. Elige otro modelo.", null, null);
 		}
 		String json = crearBodyTraduccion(req, model);
 		ChatResponseDTO res = doPostAndConvertToDto(url, json, apiKey);
+		int status = res.getStatuscode();
 
-		if (res.getStatuscode() == 429) {
+		if (status >= 200 && status < 300) {
+			if (res.getPrimerContenido() == null || res.getPrimerContenido().isBlank()) {
+				throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+						"El modelo " + nombreModelo + " no devolvió ninguna respuesta. Intenta de nuevo o elige otro modelo.",
+						null, null);
+			}
+			return parsearRespuesta(res.getPrimerContenido());
+		}
+
+		// El detalle original de OpenRouter queda en el log del servidor para diagnosticar.
+		System.err.println("OpenRouter respondió " + status + " para el modelo " + model + ": " + res.getMensajeError());
+
+		/*
+		 * Se responde 503 (y no 502) a propósito: el servidor está detrás de Cloudflare,
+		 * que reemplaza las respuestas 502 por su propia página de error sin cabeceras
+		 * CORS, y el navegador no podría leer el mensaje.
+		 */
+		switch (status) {
+		case 429:
 			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
-					"El modelo de IA está saturado en este momento. Intenta de nuevo en unos minutos.",
+					"El modelo " + nombreModelo + " está saturado en este momento. Intenta de nuevo en unos minutos o elige otro modelo.",
 					res.getRetryAfter() != null ? res.getRetryAfter() : "60", null);
+		case 404:
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"El modelo " + nombreModelo + " ya no está disponible en el proveedor de IA. Elige otro modelo.",
+					null, null);
+		case 401:
+		case 403:
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"La clave de acceso del modelo " + nombreModelo + " no es válida o fue revocada. Elige otro modelo y avisa al administrador.",
+					null, null);
+		case 402:
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"La cuenta del proveedor de IA no tiene saldo para usar el modelo " + nombreModelo + ". Elige otro modelo.",
+					null, null);
+		case 400:
+		case 413:
+			throw new IAServiceException(HttpStatus.UNPROCESSABLE_ENTITY,
+					"El modelo " + nombreModelo + " rechazó la solicitud. Revisa que el código no sea demasiado largo.",
+					null, null);
+		default:
+			throw new IAServiceException(HttpStatus.SERVICE_UNAVAILABLE,
+					"El modelo " + nombreModelo + " no está disponible en este momento (código " + status + "). Intenta de nuevo o elige otro modelo.",
+					null, null);
 		}
-		if (res.getStatuscode() < 200 || res.getStatuscode() >= 300 || res.getPrimerContenido() == null) {
-			throw new IAServiceException(HttpStatus.BAD_GATEWAY,
-					"El proveedor de IA respondió con el código " + res.getStatuscode() + ".", null, null);
+	}
+
+	/**
+	 * Convierte el identificador del modelo en un nombre legible para los
+	 * mensajes, por ejemplo {@code "google/gemma-4-31b-it:free"} →
+	 * {@code "gemma-4-31b-it"}.
+	 *
+	 * @param model Identificador del modelo en OpenRouter.
+	 * @return Nombre corto del modelo.
+	 */
+	private static String nombreLegible(String model) {
+		if (model == null) {
+			return "de IA";
 		}
-		return parsearRespuesta(res.getPrimerContenido());
+		String nombre = model.contains("/") ? model.substring(model.indexOf('/') + 1) : model;
+		return nombre.replace(":free", "");
 	}
 
 }
