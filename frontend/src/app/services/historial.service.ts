@@ -15,7 +15,7 @@ import { LoginService } from './login.service';
 export class HistorialService {
   private readonly cliente = inject(HttpClient);
   private readonly loginServicio = inject(LoginService);
-  private readonly urlbase = 'http://localhost:8080/historial';
+  private readonly urlbase = 'https://gpcueb.org/hermes/historial';
 
   /**
    * Obtiene todas las traducciones guardadas por el usuario autenticado.

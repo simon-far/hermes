@@ -22,7 +22,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @RestController
 @RequestMapping("/correo")
-@CrossOrigin(origins = { "http://localhost:4200", "http://localhost:4201" })
+@CrossOrigin(origins = { "https://hermestranslator.netlify.app", "http://localhost:4200", "http://localhost:4201" })
 @Tag(name = "Gestión de Correo", description = "Endpoints para enviar correos electrónicos")
 public class CorreoController {
 

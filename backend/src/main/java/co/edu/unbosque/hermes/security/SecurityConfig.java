@@ -117,7 +117,8 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 	    CorsConfiguration config = new CorsConfiguration();
-	    config.setAllowedOrigins(List.of("http://localhost:4200")); // origen de Angular
+	    // Orígenes del frontend Angular: desplegado en Netlify y local para desarrollo
+	    config.setAllowedOrigins(List.of("https://hermestranslator.netlify.app", "http://localhost:4200"));
 	    config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 	    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
 	    config.setExposedHeaders(List.of("Authorization"));

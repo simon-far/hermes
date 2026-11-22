@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @RestController
 @RequestMapping("/historial")
-@CrossOrigin(origins = { "http://localhost:4200", "http://localhost:4201" })
+@CrossOrigin(origins = { "https://hermestranslator.netlify.app", "http://localhost:4200", "http://localhost:4201" })
 @Transactional
 @Tag(name = "Historial", description = "Historial de traducciones del usuario autenticado")
 @SecurityRequirement(name = "bearerAuth")

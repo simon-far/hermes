@@ -8,7 +8,7 @@ import { RegisterModel } from '../models/register.model';
 @Injectable({ providedIn: 'root' })
 export class RegisterService {
   private readonly cliente = inject(HttpClient);
-  private readonly urlbase = 'http://localhost:8080';
+  private readonly urlbase = 'https://gpcueb.org/hermes';
 
   /**
    * Envía los datos de registro al backend para crear una nueva cuenta.
