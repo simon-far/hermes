@@ -13,6 +13,11 @@ import { Router } from '@angular/router';
 declare const bootstrap: any;
 
 
+/**
+ * Componente del encabezado principal de la plataforma.
+ * Gestiona la navegación pública, el estado de la sesión y los modales
+ * de inicio de sesión y registro de usuarios.
+ */
 @Component({
   selector: 'app-headercomponent',
   standalone: false,
@@ -26,19 +31,27 @@ export class Headercomponent {
   private readonly loginServicio = inject(LoginService);
   private readonly router = inject(Router);
 
+  /** Indica si hay una solicitud de registro en curso. */
   cargando = false;
+  /** Indica si hay una solicitud de inicio de sesión en curso. */
   cargandoLogin = false;
 
+  /** Formulario reactivo para autenticar usuarios existentes. */
   formularioLogin = this.fb.nonNullable.group({
     username: ['', [Validators.required]],
     password: ['', [Validators.required]],
   });
 
+  /** Formulario reactivo para el registro de nuevas cuentas. */
   formulario = this.fb.nonNullable.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
   });
+  /**
+   * Valida y envía los datos de registro al backend.
+   * Muestra una notificación con el resultado y limpia el formulario si tiene éxito.
+   */
   registrar(): void {
     if (this.cargando) return;
 
@@ -64,6 +77,10 @@ export class Headercomponent {
       });
   }
 
+  /**
+   * Autentica al usuario, cierra el modal de login y redirige al panel
+   * administrativo si la cuenta posee el rol `ADMIN`.
+   */
   iniciarSesion(): void {
     if (this.cargandoLogin) return;
 
@@ -93,19 +110,25 @@ export class Headercomponent {
       });
   }
 
+  /**
+   * Cierra la sesión activa y notifica al usuario.
+   */
   cerrarSesion(): void {
     this.loginServicio.cerrarSesion();
     this.mostrarMensaje('Sesión cerrada.', 'exito');
   }
 
+  /** Indica si existe una sesión iniciada actualmente. */
   get sesionIniciada(): boolean {
     return this.loginServicio.estaLogueado();
   }
 
+  /** Nombre del usuario autenticado o `null` si no hay sesión activa. */
   get usuarioActual(): string | null {
     return this.loginServicio.obtenerUsuario();
   }
 
+  // Accesores directos a los controles del formulario de registro
   get username() {
     return this.formulario.controls.username;
   }
@@ -115,6 +138,11 @@ export class Headercomponent {
   get password() {
     return this.formulario.controls.password;
   }
+  /**
+   * Muestra una notificación temporal en la esquina superior derecha.
+   * @param mensaje Texto a presentar al usuario.
+   * @param tipo Define el estilo visual (`'exito'` o `'error'`).
+   */
   private mostrarMensaje(mensaje: string, tipo: 'exito' | 'error'): void {
     this.snackBar.open(mensaje, 'Cerrar', {
       duration: 4000,

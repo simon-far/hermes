@@ -1,8 +1,8 @@
+/* Estilos del encabezado principal y modales de autenticación */
 
 :host {
   display: block;
 }
-
 
 .header {
   position: relative;
@@ -130,6 +130,7 @@
   color: #000;
 }
 
+/* Efecto de barrido diagonal al pasar el cursor */
 .header-status .btn::after {
   content: "";
   background: #fff;
@@ -182,6 +183,7 @@
    TARJETA ANIMADA
 ========================= */
 
+/* isolation: isolate crea un contexto de apilamiento para los pseudo-elementos del borde */
 #modalLogin .card {
   width: 100%;
   min-height: 350px;
@@ -198,6 +200,7 @@
   isolation: isolate;
 }
 
+/* Franja giratoria que genera el borde luminoso animado */
 #modalLogin .card::before {
   content: "";
   position: absolute;
@@ -214,6 +217,7 @@
   z-index: -2;
 }
 
+/* Máscara interior que deja visible únicamente el borde de 5px */
 #modalLogin .card::after {
   content: "";
   position: absolute;
@@ -361,6 +365,7 @@
    RESPONSIVE
 ========================= */
 
+/* Tablets: compacta navegación y oculta los botones de estado */
 @media (max-width: 850px) {
   .header {
     padding: 0 20px;
@@ -380,6 +385,7 @@
   }
 }
 
+/* Móviles: permite salto de línea en el header y ajusta el modal de login */
 @media (max-width: 600px) {
   .header {
     height: auto;

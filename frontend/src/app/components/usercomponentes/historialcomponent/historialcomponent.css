@@ -1,3 +1,5 @@
+/* Estilos de la vista de historial de traducciones */
+
 :host {
   display: block;
   color: #e8e9f2;
@@ -58,6 +60,7 @@
 
 /* ESTADÍSTICAS */
 
+/* Grilla de 3 tarjetas métricas; minmax(0, 1fr) evita desbordes por textos largos */
 .estadisticas {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -92,6 +95,7 @@
   font-size: 18px;
 }
 
+/* Variantes de color para los íconos de resumen */
 .icon-total {
   color: #b5a3ff;
   background: rgba(139, 120, 250, 0.13);
@@ -129,6 +133,7 @@
   min-width: 0;
 }
 
+/* Ajuste tipográfico para tarjetas cuyo valor principal es una fecha */
 .stat-card h2.stat-fecha {
   font-size: 15px;
   line-height: 1.5;
@@ -298,6 +303,7 @@
   font-size: 13px;
 }
 
+/* Paleta de colores por lenguaje de programación */
 .lang-java {
   color: #ff9b80;
   background: rgba(255, 126, 96, 0.12);
@@ -333,7 +339,7 @@
   background: rgba(139, 120, 250, 0.12);
 }
 
-/* Vista previa del código */
+/* Vista previa del código: recorta el contenido sin desbordar la tarjeta */
 
 .codigo-preview {
   flex: 1;
@@ -468,6 +474,7 @@
 
 /* VENTANAS (MODALES) */
 
+/* Capa fija sobre toda la interfaz para edición y confirmación de eliminación */
 .modal-backdrop-hermes {
   position: fixed;
   inset: 0;
@@ -480,6 +487,7 @@
   backdrop-filter: blur(3px);
 }
 
+/* Permite scroll interno si el contenido del modal supera el alto de la ventana */
 .modal-card {
   width: 100%;
   max-width: 720px;
@@ -493,6 +501,7 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
 
+/* Variante compacta para el diálogo de confirmación */
 .modal-small {
   max-width: 400px;
   text-align: center;
@@ -596,6 +605,7 @@
   border-color: #8b78fa;
 }
 
+/* Resalta campos inválidos de Angular después de ser tocados */
 .form-field textarea.ng-invalid.ng-touched {
   border-color: #ff6b6b;
 }
@@ -705,6 +715,7 @@
 
 /* RESPONSIVE */
 
+/* Tablets: reduce estadísticas y grilla de traducciones a 2 columnas */
 @media (max-width: 1000px) {
   .estadisticas {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -715,6 +726,7 @@
   }
 }
 
+/* Móviles: apila tarjetas, filtros, filas de formulario y acciones de modales */
 @media (max-width: 650px) {
   .historial-page {
     padding: 35px 17px 45px;
@@ -754,6 +766,7 @@
     gap: 0;
   }
 
+  /* Coloca la acción principal arriba en pantallas pequeñas */
   .modal-actions {
     flex-direction: column-reverse;
   }

@@ -1,3 +1,4 @@
+<!-- Cabecera de navegación del panel administrativo -->
 <app-headeradmincomponent></app-headeradmincomponent>
 <main class="admin-page">
 
@@ -21,13 +22,14 @@
 
   </section>
 
+  <!-- Alerta visible cuando falla la carga de datos del dashboard -->
   <div class="load-error" *ngIf="error()">
     <i class="fa-solid fa-triangle-exclamation"></i>
     {{ error() }}
   </div>
 
 
-  <!-- ESTADÍSTICAS -->
+  <!-- ESTADÍSTICAS: tarjetas con los indicadores principales -->
   <section class="statistics-section">
 
     <div class="section-title">
@@ -50,6 +52,7 @@
             <i [class]="estadistica.icono"></i>
           </div>
 
+          <!-- Variación opcional del indicador -->
           <span
             class="stat-variation"
             *ngIf="estadistica.variacion"
@@ -80,7 +83,7 @@
   <!-- RESUMEN Y GRÁFICAS -->
   <section class="dashboard-content">
 
-    <!-- SOLICITUDES POR LENGUAJE -->
+    <!-- SOLICITUDES POR LENGUAJE: distribución proporcional en barra segmentada -->
     <article class="dashboard-card requests-card">
 
       <div class="card-heading">
@@ -99,6 +102,7 @@
         <span>Solicitudes totales</span>
       </div>
 
+      <!-- Cada segmento ajusta su ancho según el porcentaje del lenguaje -->
       <div class="requests-progress">
 
         <div class="progress-track">
@@ -124,6 +128,7 @@
           <strong>{{ lenguaje.cantidad }}</strong>
         </div>
 
+        <!-- Estado vacío cuando no hay registros y terminó la carga -->
         <div class="legend-item" *ngIf="!cargando() && lenguajes().length === 0">
           <div class="legend-label">
             <span>Aún no hay solicitudes registradas.</span>
@@ -132,6 +137,7 @@
 
       </div>
 
+      <!-- Destaca el lenguaje líder (primer elemento ordenado por cantidad) -->
       <div class="completion-rate" *ngIf="lenguajes().length">
         <div>
           <span>Lenguaje más solicitado</span>
@@ -144,7 +150,7 @@
     </article>
 
 
-    <!-- GRÁFICA DE ACTIVIDAD -->
+    <!-- GRÁFICA DE ACTIVIDAD: comparativa mensual de usuarios y solicitudes -->
     <article class="dashboard-card chart-card">
 
       <div class="card-heading">
@@ -176,12 +182,14 @@
 
       <div class="chart-container">
 
+        <!-- Escala numérica del eje Y -->
         <div class="chart-y-axis">
           <span *ngFor="let marca of marcasGrafica()">{{ marca | number:'1.0-0' }}</span>
         </div>
 
         <div class="chart-content">
 
+          <!-- Líneas horizontales de referencia -->
           <div class="chart-grid-lines">
             <span></span>
             <span></span>
@@ -190,6 +198,7 @@
             <span></span>
           </div>
 
+          <!-- Columnas agrupadas por periodo; altura calculada dinámicamente -->
           <div class="chart-columns">
 
             <div
@@ -230,7 +239,7 @@
   </section>
 
 
-  <!-- ACTIVIDAD RECIENTE -->
+  <!-- ACTIVIDAD RECIENTE: listado cronológico de las últimas solicitudes -->
   <section class="dashboard-card activity-card">
 
     <div class="card-heading">
@@ -280,7 +289,7 @@
   </section>
 
 
-  <!-- ACCESOS RÁPIDOS -->
+  <!-- ACCESOS RÁPIDOS: tarjetas de resumen hacia los módulos administrativos -->
   <section class="quick-access-section">
 
     <div class="section-title">

@@ -1,3 +1,6 @@
+/* Estilos de la cabecera de administración */
+
+/* Mantiene el header y el dropdown por encima del contenido principal */
 :host {
   display: block;
   position: relative;
@@ -111,6 +114,7 @@
   background: #1b1e2d;
 }
 
+/* Estado activo controlado por routerLinkActive */
 .nav-link.active {
   color: #ad99ff;
   background: #292342;
@@ -186,6 +190,7 @@
   transition: transform 0.2s ease;
 }
 
+/* Rota el ícono cuando el menú está desplegado */
 .profile-arrow.rotated {
   transform: rotate(180deg);
 }
@@ -250,6 +255,7 @@
   background: #25293a;
 }
 
+/* Estilo diferenciado para cerrar sesión */
 .dropdown-item.logout {
   color: #ff777f;
 }
@@ -268,6 +274,7 @@
    ANIMACIÓN
 ========================= */
 
+/* Entrada suave del menú desplegable */
 @keyframes dropdownAppear {
   from {
     opacity: 0;
@@ -284,6 +291,7 @@
    RESPONSIVE
 ========================= */
 
+/* Tablets: oculta el texto de los enlaces y deja solo los íconos */
 @media (max-width: 1050px) {
 
   .admin-header {
@@ -304,6 +312,7 @@
 
 }
 
+/* Móviles: reduce el header y oculta nombre/rol del perfil */
 @media (max-width: 600px) {
 
   .admin-header {

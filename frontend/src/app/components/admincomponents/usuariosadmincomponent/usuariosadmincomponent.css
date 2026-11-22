@@ -1,9 +1,12 @@
 
+/* Estilos de la vista de gestión de usuarios */
+
 :host {
   display: block;
   min-height: 100%;
 }
 
+/* Descuenta la altura del header (76px) para cubrir el alto completo de la pantalla */
 .users-page {
   min-height: calc(100vh - 76px);
   padding: 42px 5% 60px;
@@ -174,6 +177,7 @@
 
 /* TABLA */
 
+/* Habilita desplazamiento horizontal en pantallas angostas */
 .users-table-container {
   width: 100%;
   overflow-x: auto;
@@ -309,6 +313,7 @@
 
 /* VENTANAS (MODALES) */
 
+/* Capa fija sobre toda la interfaz para edición y confirmación de borrado */
 .modal-backdrop-hermes {
   position: fixed;
   inset: 0;
@@ -321,6 +326,7 @@
   backdrop-filter: blur(3px);
 }
 
+/* Permite scroll interno si el contenido supera el alto visible */
 .modal-card {
   width: 100%;
   max-width: 440px;
@@ -334,6 +340,7 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
 }
 
+/* Variante compacta para el modal de confirmación */
 .modal-small {
   max-width: 380px;
   text-align: center;
@@ -414,6 +421,7 @@
   border-color: #9278ff;
 }
 
+/* Resalta campos inválidos de Angular tras ser tocados por el usuario */
 .form-field input.ng-invalid.ng-touched {
   border-color: #ff6b6b;
 }
@@ -537,6 +545,7 @@
 
 /* RESPONSIVE */
 
+/* Tablets: expande la tarjeta de estadísticas y apila el encabezado */
 @media (max-width: 800px) {
   .users-statistics {
     grid-template-columns: minmax(0, 1fr);
@@ -548,6 +557,7 @@
   }
 }
 
+/* Móviles: apila controles de barra, acciones de tabla y botones de modales */
 @media (max-width: 600px) {
   .users-page {
     padding: 30px 4% 45px;
@@ -576,6 +586,7 @@
     align-items: flex-end;
   }
 
+  /* Mantiene la acción principal arriba en pantallas pequeñas */
   .modal-actions {
     flex-direction: column-reverse;
   }
