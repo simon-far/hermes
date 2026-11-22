@@ -1,6 +1,8 @@
+<!-- Espacio de trabajo principal para la traducción de código -->
 <section class="translator-page">
 
 
+  <!-- Encabezado y descripción de la herramienta -->
   <div class="translator-heading">
     <span class="section-label">CODE TRANSLATION WORKSPACE</span>
 
@@ -13,6 +15,7 @@
   </div>
 
   <div class="translator-card">
+    <!-- Barra de selección e intercambio de lenguajes -->
     <div class="translator-toolbar">
 
       <div class="language-selector">
@@ -49,6 +52,7 @@
 
     </div>
 
+    <!-- Paneles de edición: código original y resultado traducido -->
     <div class="editor-grid">
 
       <section class="editor-panel">
@@ -74,6 +78,7 @@
       </section>
 
     </div>
+    <!-- Selector desplegable del modelo de IA -->
     <div class="model-picker">
       <button type="button" class="btnModelo" (click)="seleccionarModelo($event)" aria-haspopup="listbox"
         [attr.aria-expanded]="menuModelosAbierto">
@@ -82,6 +87,7 @@
         <span class="chevron" [class.open]="menuModelosAbierto" aria-hidden="true">▾</span>
       </button>
 
+      <!-- stopPropagation evita cerrar el menú al interactuar con las opciones -->
       @if (menuModelosAbierto) {
       <ul class="model-list" role="listbox" (click)="$event.stopPropagation()">
         @for (modelo of modelos; track modelo.endpoint) {
@@ -94,6 +100,7 @@
       </ul>
       }
     </div>
+    <!-- Acciones principales del traductor -->
     <div class="translator-actions">
 
       <button type="button" class="secondary-button" (click)="enviarCorreo()">
@@ -108,6 +115,7 @@
         Copiar resultado
       </button>
 
+      <!-- Deshabilitado mientras la solicitud de traducción está en proceso -->
       <button type="button" class="primary-button" [disabled]="cargando" (click)="traducir()">
         {{ cargando ? 'Traduciendo…' : 'Traducir código' }}
         <span aria-hidden="true">→</span>
@@ -115,6 +123,7 @@
 
     </div>
 
+    <!-- Panel opcional con recomendaciones devueltas por la IA -->
     @if (mejoras.length > 0) {
     <section class="suggestions-panel" aria-labelledby="suggestionsTitle">
       <div class="editor-header">
@@ -129,6 +138,7 @@
     </section>
     }
 
+    <!-- Aviso de revisión del resultado generado -->
     <p class="translator-notice">
       La traducción la realiza una IA y puede tardar unos segundos.
       Revisa el resultado antes de usarlo.

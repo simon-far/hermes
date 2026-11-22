@@ -15,6 +15,10 @@ import { LoginService } from '../../../services/login.service';
 // Bootstrap se carga globalmente desde index.html (bootstrap.bundle.min.js).
 declare const bootstrap: any;
 
+/**
+ * Componente del historial personal de traducciones del usuario.
+ * Permite listar, filtrar, editar y eliminar traducciones guardadas en su cuenta.
+ */
 @Component({
   selector: 'app-historialcomponent',
   standalone: false,
@@ -26,18 +30,27 @@ export class Historialcomponent implements OnInit {
   private readonly loginServicio = inject(LoginService);
   private readonly snackBar = inject(MatSnackBar);
 
+  /** Catálogo de lenguajes disponibles para filtros y edición. */
   readonly lenguajes = LENGUAJES_HISTORIAL;
 
+  /** Listado completo de traducciones del usuario autenticado. */
   traducciones = signal<TraduccionHistorial[]>([]);
+  /** Indica si la consulta del historial está en curso. */
   cargando = signal(false);
+  /** Mensaje de error mostrado cuando falla la carga inicial. */
   errorCarga = signal<string | null>(null);
+  /** Estado actual de autenticación del usuario. */
   logueado = signal(this.loginServicio.estaLogueado());
 
+  /** Término de búsqueda aplicado sobre el código y los lenguajes. */
   busqueda = '';
+  /** Lenguaje seleccionado en el filtro (`'todos'` para no filtrar). */
   filtroLenguaje = 'todos';
 
+  /** Total de traducciones guardadas en el historial. */
   totalTraducciones = computed(() => this.traducciones().length);
 
+  /** Cantidad de lenguajes distintos usados como origen o destino. */
   totalLenguajes = computed(() => {
     const usados = new Set<string>();
     this.traducciones().forEach((t) => {
@@ -47,7 +60,7 @@ export class Historialcomponent implements OnInit {
     return usados.size;
   });
 
-  // La lista llega ordenada de la más reciente a la más antigua.
+  /** Fecha de la traducción más reciente (la lista llega ordenada descendentemente). */
   ultimaTraduccion = computed(() => this.traducciones()[0]?.fecha ?? null);
 
   // Ventana de modificación
@@ -64,10 +77,17 @@ export class Historialcomponent implements OnInit {
   traduccionAEliminar = signal<TraduccionHistorial | null>(null);
   eliminando = false;
 
+  /**
+   * Inicializa el componente solicitando el historial del usuario si tiene sesión activa.
+   */
   ngOnInit(): void {
     this.cargarHistorial();
   }
 
+  /**
+   * Consulta el historial del usuario autenticado.
+   * Si el servidor responde 401/403, cierra la sesión local y actualiza el estado.
+   */
   cargarHistorial(): void {
     this.logueado.set(this.loginServicio.estaLogueado());
     if (!this.logueado()) {
@@ -93,6 +113,10 @@ export class Historialcomponent implements OnInit {
       });
   }
 
+  /**
+   * Devuelve las traducciones que coinciden con el texto buscado y el lenguaje filtrado.
+   * @returns Lista filtrada de traducciones.
+   */
   get traduccionesFiltradas(): TraduccionHistorial[] {
     const termino = this.busqueda.trim().toLowerCase();
 
@@ -113,11 +137,17 @@ export class Historialcomponent implements OnInit {
     });
   }
 
+  /**
+   * Restablece la barra de búsqueda y el selector de lenguaje a sus valores iniciales.
+   */
   limpiarFiltros(): void {
     this.busqueda = '';
     this.filtroLenguaje = 'todos';
   }
 
+  /**
+   * Abre el modal global de inicio de sesión definido en el encabezado.
+   */
   abrirLogin(): void {
     const elemento = document.getElementById('modalLogin');
     if (elemento) {
@@ -127,12 +157,22 @@ export class Historialcomponent implements OnInit {
 
   // ---------- Presentación ----------
 
+  /**
+   * Obtiene el nombre legible de un lenguaje a partir de su código.
+   * @param codigo Código del lenguaje (ej. `'PYTHON'`).
+   * @returns Etiqueta amigable o `'Desconocido'` si no existe.
+   */
   etiquetaLenguaje(codigo: string | null | undefined): string {
     if (!codigo) return 'Desconocido';
     const encontrado = this.lenguajes.find((l) => l.valor === codigo.toUpperCase());
     return encontrado ? encontrado.etiqueta : codigo;
   }
 
+  /**
+   * Devuelve la clase de ícono de Font Awesome asociada a un lenguaje.
+   * @param codigo Código del lenguaje.
+   * @returns Clases CSS del ícono correspondiente.
+   */
   iconoLenguaje(codigo: string | null | undefined): string {
     switch (codigo?.toUpperCase()) {
       case 'JAVA':
@@ -146,6 +186,11 @@ export class Historialcomponent implements OnInit {
     }
   }
 
+  /**
+   * Devuelve la clase CSS de color para el chip de un lenguaje.
+   * @param codigo Código del lenguaje.
+   * @returns Nombre de clase CSS definida en el componente.
+   */
   claseLenguaje(codigo: string | null | undefined): string {
     switch (codigo?.toUpperCase()) {
       case 'JAVA':
@@ -165,6 +210,11 @@ export class Historialcomponent implements OnInit {
     }
   }
 
+  /**
+   * Formatea una fecha ISO al formato local colombiano (`es-CO`).
+   * @param fecha Cadena de fecha o `null`.
+   * @returns Fecha formateada o `'Sin fecha'` si no es válida.
+   */
   formatearFecha(fecha: string | null): string {
     if (!fecha) return 'Sin fecha';
     const valor = new Date(fecha);
@@ -172,7 +222,12 @@ export class Historialcomponent implements OnInit {
     return valor.toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
-  /** Primeras líneas del código traducido para la vista previa de la tarjeta. */
+  /**
+   * Recorta el código traducido a sus primeras líneas para la vista previa de la tarjeta.
+   * @param codigo Texto completo del código.
+   * @param lineas Cantidad máxima de líneas a mostrar (por defecto 6).
+   * @returns Fragmento recortado con puntos suspensivos si excede el límite.
+   */
   vistaPrevia(codigo: string | null | undefined, lineas = 6): string {
     if (!codigo) return '(sin código)';
     const partes = codigo.split('\n');
@@ -180,7 +235,12 @@ export class Historialcomponent implements OnInit {
     return partes.length > lineas ? `${recorte}\n…` : recorte;
   }
 
-  /** Lenguajes para el formulario, incluyendo el actual si no está en la lista. */
+  /**
+   * Construye las opciones de lenguaje para el formulario, asegurando que el valor
+   * actual aparezca disponible aunque no pertenezca al catálogo predefinido.
+   * @param actual Código del lenguaje actualmente asignado.
+   * @returns Lista de opciones para el `<select>`.
+   */
   opcionesLenguaje(actual: string): Opcion[] {
     if (!actual || this.lenguajes.some((l) => l.valor === actual)) {
       return this.lenguajes;
@@ -190,6 +250,10 @@ export class Historialcomponent implements OnInit {
 
   // ---------- Modificar ----------
 
+  /**
+   * Precarga los datos de la traducción seleccionada y abre el modal de edición.
+   * @param t Registro del historial a modificar.
+   */
   abrirEdicion(t: TraduccionHistorial): void {
     this.formulario = {
       codigoOriginal: t.codigoOriginal ?? '',
@@ -200,11 +264,18 @@ export class Historialcomponent implements OnInit {
     this.traduccionEditando.set(t);
   }
 
+  /**
+   * Cierra el modal de edición si no hay una operación de guardado en curso.
+   */
   cerrarEdicion(): void {
     if (this.guardando) return;
     this.traduccionEditando.set(null);
   }
 
+  /**
+   * Valida el formulario, guarda los cambios en el backend y actualiza la lista local.
+   * @param form Referencia al formulario template-driven de edición.
+   */
   guardarCambios(form: NgForm): void {
     const traduccion = this.traduccionEditando();
     if (!traduccion || this.guardando) return;
@@ -236,15 +307,25 @@ export class Historialcomponent implements OnInit {
 
   // ---------- Eliminar ----------
 
+  /**
+   * Abre el modal de confirmación para eliminar una traducción.
+   * @param t Registro seleccionado para eliminación.
+   */
   pedirConfirmacionEliminar(t: TraduccionHistorial): void {
     this.traduccionAEliminar.set(t);
   }
 
+  /**
+   * Cierra el modal de confirmación si no hay una eliminación en progreso.
+   */
   cancelarEliminar(): void {
     if (this.eliminando) return;
     this.traduccionAEliminar.set(null);
   }
 
+  /**
+   * Elimina la traducción seleccionada en el backend y la remueve del estado local.
+   */
   confirmarEliminar(): void {
     const traduccion = this.traduccionAEliminar();
     if (!traduccion || this.eliminando) return;
@@ -265,7 +346,9 @@ export class Historialcomponent implements OnInit {
       });
   }
 
-  // Cierra la ventana abierta con la tecla Escape.
+  /**
+   * Cierra cualquier modal abierto al presionar la tecla Escape.
+   */
   @HostListener('document:keydown.escape')
   cerrarVentanas(): void {
     this.cerrarEdicion();
@@ -274,6 +357,12 @@ export class Historialcomponent implements OnInit {
 
   // ---------- Utilidades ----------
 
+  /**
+   * Traduce una respuesta de error HTTP a un mensaje legible para el usuario.
+   * @param error Error HTTP recibido del servidor.
+   * @param porDefecto Mensaje de respaldo cuando no hay detalle específico.
+   * @returns Texto descriptivo del error.
+   */
   private obtenerMensajeError(error: HttpErrorResponse, porDefecto: string): string {
     if (error.status === 0) {
       return 'No hay conexión con el servidor.';
@@ -287,6 +376,11 @@ export class Historialcomponent implements OnInit {
     return porDefecto;
   }
 
+  /**
+   * Muestra una notificación temporal en la esquina superior derecha.
+   * @param mensaje Texto a presentar.
+   * @param tipo Define el estilo visual (`'exito'` o `'error'`).
+   */
   private mostrarMensaje(mensaje: string, tipo: 'exito' | 'error'): void {
     this.snackBar.open(mensaje, 'Cerrar', {
       duration: 4000,

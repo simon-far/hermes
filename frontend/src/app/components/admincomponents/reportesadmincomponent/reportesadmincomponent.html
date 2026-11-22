@@ -1,8 +1,10 @@
 
+<!-- Cabecera de navegación del panel administrativo -->
 <app-headeradmincomponent></app-headeradmincomponent>
 
 <main class="reports-page">
 
+  <!-- ENCABEZADO -->
   <section class="page-heading">
     <div>
       <span class="eyebrow">CENTRO DE ADMINISTRACIÓN</span>
@@ -16,12 +18,13 @@
     </div>
   </section>
 
+  <!-- Alerta visible si falla la carga de datos de reportes -->
   <div class="load-error" *ngIf="error()">
     <i class="fa-solid fa-triangle-exclamation"></i>
     {{ error() }}
   </div>
 
-  <!-- RESUMEN GENERAL -->
+  <!-- RESUMEN GENERAL: métricas clave en 4 tarjetas -->
   <section class="stats-grid">
 
     <article class="stat-card">
@@ -73,7 +76,7 @@
   <!-- GRÁFICOS -->
   <section class="charts-grid">
 
-    <!-- SOLICITUDES POR LENGUAJE -->
+    <!-- SOLICITUDES POR LENGUAJE: gráfico circular generado con conic-gradient -->
     <article class="report-card">
       <div class="card-heading">
         <div>
@@ -85,6 +88,7 @@
 
       <div class="status-chart-container">
 
+        <!-- El fondo dinámico dibuja los segmentos proporcionales del donut -->
         <div class="donut-chart" [style.background]="fondoDonut()">
           <div class="donut-inner">
             <strong>{{ totalSolicitudes() }}</strong>
@@ -101,6 +105,7 @@
             </div>
           </div>
 
+          <!-- Estado vacío cuando no existen solicitudes tras finalizar la carga -->
           <div class="legend-item" *ngIf="!cargando() && lenguajes().length === 0">
             <div>
               <span>Aún no hay solicitudes registradas.</span>
@@ -111,7 +116,7 @@
       </div>
     </article>
 
-    <!-- SOLICITUDES POR MES -->
+    <!-- SOLICITUDES POR MES: gráfico de barras verticales -->
     <article class="report-card">
       <div class="card-heading">
         <div>
@@ -122,10 +127,12 @@
       </div>
 
       <div class="bar-chart">
+        <!-- Escala numérica del eje Y -->
         <div class="chart-y-labels">
           <span *ngFor="let marca of marcasBarras()">{{ marca | number:'1.0-0' }}</span>
         </div>
 
+        <!-- Columnas por mes con altura porcentual calculada en el componente -->
         <div class="bars-container">
           <div class="bar-column" *ngFor="let item of estadisticasMensuales()">
             <span class="bar-value">{{ item.cantidad }}</span>
@@ -145,7 +152,7 @@
 
   </section>
 
-  <!-- DESCARGA DE REPORTES -->
+  <!-- DESCARGA DE REPORTES: exportación en formato CSV -->
   <section class="downloads-section">
 
     <div class="section-heading">
@@ -169,6 +176,7 @@
           <span>{{ totalUsuarios() }} registros disponibles</span>
         </div>
 
+        <!-- Se deshabilita mientras carga o si no hay registros para exportar -->
         <button
           class="download-button"
           (click)="descargarReporteUsuarios()"

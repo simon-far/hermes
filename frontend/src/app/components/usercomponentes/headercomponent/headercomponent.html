@@ -1,4 +1,6 @@
+<!-- Encabezado principal de navegación para usuarios -->
 <header class="header">
+  <!-- Marca y enlace al inicio -->
   <a class="brand" routerLink="/" aria-label="CodeShift, inicio">
     <span class="brand-icon">
       <span>&lt;/&gt;</span>
@@ -9,6 +11,7 @@
     </span>
   </a>
 
+  <!-- Enlaces principales de la plataforma -->
   <nav class="navigation" aria-label="Navegación principal">
     <a routerLink="/usuario/traductor" routerLinkActive="active">
       <i class="bi bi-arrow-left-right"></i>
@@ -21,6 +24,7 @@
     </a>
   </nav>
 
+  <!-- Estado de sesión: muestra el usuario autenticado o los accesos de ingreso/registro -->
   <div class="header-status">
     <!-- From Uiverse.io by CristianMontoya98 -->
     @if (sesionIniciada) {
@@ -44,6 +48,7 @@
   </div>
 </header>
 
+<!-- Modal de inicio de sesión (Bootstrap) -->
 <div
   class=" modal fade
     "
@@ -57,6 +62,7 @@
 
       <div class="card">
 
+        <!-- Botón de cierre del modal -->
         <button
           type="button"
           class="cerrar-modal"
@@ -68,6 +74,7 @@
         <div class="contenido-login">
           <h2 id="modalLoginLabel">Iniciar sesión</h2>
 
+          <!-- Formulario reactivo de autenticación -->
           <form [formGroup]="formularioLogin" (ngSubmit)="iniciarSesion()">
             <div class="campo">
               <label for="usuarioLogin">Usuario</label>
@@ -93,6 +100,7 @@
                 required>
             </div>
 
+            <!-- Deshabilitado mientras la solicitud de inicio de sesión está en curso -->
             <button type="submit" class="btn-login" [disabled]="cargandoLogin">
               {{ cargandoLogin ? 'Ingresando…' : 'Iniciar sesión' }}
             </button>
@@ -105,7 +113,7 @@
 </div>
 
 
-<!-- Modal de registro -->
+<!-- Modal de registro de nuevos usuarios (Bootstrap) -->
 <div
   class="modal fade"
   id="modalRegistro"
@@ -130,6 +138,7 @@
         <div class="contenido-login">
           <h2 id="modalRegistroLabel">Crear cuenta</h2>
 
+          <!-- Formulario reactivo de registro -->
           <form [formGroup]="formulario" (ngSubmit)="registrar()">
             <!-- Nombre -->
             <div class="campo">

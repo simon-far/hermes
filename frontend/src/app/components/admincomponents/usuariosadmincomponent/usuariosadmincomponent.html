@@ -1,4 +1,5 @@
 
+<!-- Cabecera de navegación del panel administrativo -->
 <app-headeradmincomponent></app-headeradmincomponent>
 
 <main class="users-page">
@@ -17,7 +18,7 @@
     </div>
   </section>
 
-  <!-- Estadísticas -->
+  <!-- Estadísticas: conteo total de cuentas registradas -->
   <section class="users-statistics">
 
     <article class="stat-card">
@@ -46,7 +47,7 @@
       </span>
     </div>
 
-    <!-- Búsqueda -->
+    <!-- Búsqueda en tiempo real por nombre o correo -->
     <div class="users-toolbar">
 
       <div class="search-box">
@@ -80,6 +81,7 @@
           <td>
             <div class="user-information">
 
+              <!-- Inicial del nombre de usuario como avatar -->
               <div class="user-avatar">
                 {{ (user.username || '?').charAt(0).toUpperCase() }}
               </div>
@@ -102,6 +104,7 @@
                 Actualizar
               </button>
 
+              <!-- Deshabilitado para evitar que el administrador elimine su propia cuenta -->
               <button
                 class="delete-button"
                 type="button"
@@ -117,6 +120,7 @@
 
         </tr>
 
+        <!-- Estado vacío cuando no hay coincidencias con la búsqueda -->
         <tr *ngIf="usuariosFiltrados.length === 0">
           <td colspan="2" class="empty-state">
             <i class="fa-solid fa-user-slash"></i>
@@ -135,9 +139,10 @@
 
 </main>
 
-<!-- Ventana: actualizar usuario -->
+<!-- Modal: actualización de datos del usuario seleccionado -->
 @if (usuarioEditando(); as usuario) {
 <div class="modal-backdrop-hermes" (click)="cerrarEdicion()">
+  <!-- stopPropagation evita cerrar el modal al hacer clic dentro de la tarjeta -->
   <div
     class="modal-card"
     role="dialog"
@@ -155,6 +160,7 @@
       </button>
     </div>
 
+    <!-- Formulario template-driven con validaciones locales -->
     <form #formEditar="ngForm" (ngSubmit)="guardarCambios(formEditar)" novalidate>
 
       <label class="form-field">
@@ -196,6 +202,7 @@
         </select>
       </label>
 
+      <!-- Campo opcional: si queda vacío, conserva la contraseña actual -->
       <label class="form-field">
         <span>Nueva contraseña <em>(opcional)</em></span>
         <input
@@ -226,7 +233,7 @@
 </div>
 }
 
-<!-- Ventana: confirmar eliminación -->
+<!-- Modal: confirmación de eliminación permanente -->
 @if (usuarioAEliminar(); as usuario) {
 <div class="modal-backdrop-hermes" (click)="cancelarEliminar()">
   <div

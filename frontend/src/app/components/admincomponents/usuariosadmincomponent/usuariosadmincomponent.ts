@@ -8,6 +8,10 @@ import { Opcion } from '../../../models/opcion.model';
 import { UsuarioService } from '../../../services/usuario.service';
 import { LoginService } from '../../../services/login.service';
 
+/**
+ * Componente para la gestión de usuarios desde el panel de administración.
+ * Permite listar, buscar, actualizar datos y eliminar cuentas registradas.
+ */
 @Component({
   selector: 'app-usuariosadmincomponent',
   standalone: false,
@@ -19,14 +23,18 @@ export class Usuariosadmincomponent implements OnInit {
   private readonly loginServicio = inject(LoginService);
   private readonly snackBar = inject(MatSnackBar);
 
+  /** Término de búsqueda ingresado para filtrar el directorio. */
   busqueda = '';
 
+  /** Listado completo de usuarios cargados desde el backend. */
   usuarios = signal<User[]>([]);
+  /** Conteo total de usuarios registrados. */
   totalUsuarios = computed(() => this.usuarios().length);
 
   /** Nombre del administrador con sesión iniciada (no puede eliminarse a sí mismo). */
   readonly usuarioActual = this.loginServicio.obtenerUsuario();
 
+  /** Opciones de roles disponibles en el formulario de edición. */
   readonly roles: Opcion<RolUsuario>[] = [
     { valor: 'USER', etiqueta: 'Usuario' },
     { valor: 'ADMIN', etiqueta: 'Administrador' },
@@ -41,10 +49,16 @@ export class Usuariosadmincomponent implements OnInit {
   usuarioAEliminar = signal<User | null>(null);
   eliminando = false;
 
+  /**
+   * Inicializa el componente cargando el directorio de usuarios.
+   */
   ngOnInit(): void {
     this.cargarUsuarios();
   }
 
+  /**
+   * Consulta todos los usuarios registrados y actualiza el estado local.
+   */
   cargarUsuarios(): void {
     this.usuarioService.getAll().subscribe({
       next: (respuesta) => {
@@ -56,6 +70,10 @@ export class Usuariosadmincomponent implements OnInit {
     });
   }
 
+  /**
+   * Filtra los usuarios por nombre de usuario o correo según el término de búsqueda.
+   * @returns Lista de usuarios que coinciden con el filtro actual.
+   */
   get usuariosFiltrados(): User[] {
     const termino = this.busqueda.trim().toLowerCase();
 
@@ -66,12 +84,21 @@ export class Usuariosadmincomponent implements OnInit {
     );
   }
 
+  /**
+   * Verifica si el usuario corresponde a la cuenta del administrador en sesión.
+   * @param user Usuario a evaluar.
+   * @returns `true` si coincide con el usuario autenticado.
+   */
   esUsuarioActual(user: User): boolean {
     return !!this.usuarioActual && user.username === this.usuarioActual;
   }
 
   // ---------- Actualizar ----------
 
+  /**
+   * Precarga los datos del usuario seleccionado y abre el modal de edición.
+   * @param user Usuario que se va a actualizar.
+   */
   abrirEdicion(user: User): void {
     this.formulario = {
       username: user.username ?? '',
@@ -82,11 +109,18 @@ export class Usuariosadmincomponent implements OnInit {
     this.usuarioEditando.set(user);
   }
 
+  /**
+   * Cierra el modal de edición siempre que no haya una operación de guardado en curso.
+   */
   cerrarEdicion(): void {
     if (this.guardando) return;
     this.usuarioEditando.set(null);
   }
 
+  /**
+   * Valida el formulario, envía los cambios al backend y actualiza el registro en la lista local.
+   * @param form Referencia al formulario template-driven de edición.
+   */
   guardarCambios(form: NgForm): void {
     const usuario = this.usuarioEditando();
     if (!usuario || this.guardando) return;
@@ -129,15 +163,25 @@ export class Usuariosadmincomponent implements OnInit {
 
   // ---------- Eliminar ----------
 
+  /**
+   * Abre el modal de confirmación para eliminar un usuario.
+   * @param user Usuario seleccionado para eliminación.
+   */
   pedirConfirmacionEliminar(user: User): void {
     this.usuarioAEliminar.set(user);
   }
 
+  /**
+   * Cierra el modal de confirmación si no hay una eliminación en progreso.
+   */
   cancelarEliminar(): void {
     if (this.eliminando) return;
     this.usuarioAEliminar.set(null);
   }
 
+  /**
+   * Ejecuta la eliminación del usuario seleccionado y lo remueve de la lista local.
+   */
   confirmarEliminar(): void {
     const usuario = this.usuarioAEliminar();
     if (!usuario || this.eliminando) return;
@@ -158,7 +202,9 @@ export class Usuariosadmincomponent implements OnInit {
       });
   }
 
-  // Cierra la ventana abierta con la tecla Escape.
+  /**
+   * Cierra cualquier modal abierto al presionar la tecla Escape.
+   */
   @HostListener('document:keydown.escape')
   cerrarVentanas(): void {
     this.cerrarEdicion();
@@ -167,6 +213,12 @@ export class Usuariosadmincomponent implements OnInit {
 
   // ---------- Utilidades ----------
 
+  /**
+   * Traduce la respuesta de error HTTP a un mensaje legible para el usuario.
+   * @param error Error HTTP recibido del servidor.
+   * @param porDefecto Mensaje de respaldo si el error no incluye detalle.
+   * @returns Texto descriptivo del error.
+   */
   private obtenerMensajeError(error: HttpErrorResponse, porDefecto: string): string {
     if (error.status === 0) {
       return 'No hay conexión con el servidor.';
@@ -181,6 +233,11 @@ export class Usuariosadmincomponent implements OnInit {
     return porDefecto;
   }
 
+  /**
+   * Muestra una notificación temporal en la esquina superior derecha.
+   * @param mensaje Texto a mostrar.
+   * @param tipo Define el estilo visual de la notificación (`'exito'` o `'error'`).
+   */
   private mostrarMensaje(mensaje: string, tipo: 'exito' | 'error'): void {
     this.snackBar.open(mensaje, 'Cerrar', {
       duration: 4000,

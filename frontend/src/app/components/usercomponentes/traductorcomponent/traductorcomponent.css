@@ -1,4 +1,6 @@
 
+/* Estilos de la vista del traductor de código */
+
 :host {
   display: block;
   color: #e8e9f2;
@@ -56,6 +58,7 @@
 
 /* Selectores de lenguaje */
 
+/* Distribución en 3 columnas: lenguaje origen, botón de intercambio y lenguaje destino */
 .translator-toolbar {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);
@@ -119,6 +122,7 @@
 
 /* Paneles del editor */
 
+/* Dos paneles simétricos; minmax(0, 1fr) evita desbordes del editor */
 .editor-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -261,6 +265,7 @@
 
 /* Adaptación para pantallas pequeñas */
 
+/* Tablets: apila los paneles de código en una sola columna */
 @media (max-width: 800px) {
   .translator-page {
     padding: 40px 18px 52px;
@@ -275,6 +280,7 @@
   }
 }
 
+/* Móviles: compacta la barra de lenguajes y extiende el botón principal a todo el ancho */
 @media (max-width: 480px) {
   .translator-toolbar {
     grid-template-columns: minmax(0, 1fr) 38px minmax(0, 1fr);
@@ -298,6 +304,7 @@
     text-align: left;
   }
 }
+/* Texto con degradado para resaltar palabras clave en el encabezado */
 .textode{
   background: linear-gradient(to right, #00a5ff, #c441ff);
 
@@ -353,6 +360,7 @@
   transform: rotate(180deg);
 }
 
+/* Menú desplegable flotante con las opciones de modelos disponibles */
 .model-list {
   position: absolute;
   top: calc(100% + 6px);

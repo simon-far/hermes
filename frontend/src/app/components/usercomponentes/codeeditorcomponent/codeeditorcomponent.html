@@ -1,12 +1,15 @@
+<!-- Contenedor del editor de código -->
 <div class="editor-box">
   <div class="editor-bar">
     <span class="editor-title">{{ label() }}</span>
     <span class="spacer"></span>
+    <!-- Contador de caracteres visible solo en modo editable -->
     @if (!readOnly()) {
       <span class="counter" [class.over]="value().length > maxChars()" aria-live="polite">
         {{ value().length }} / {{ maxChars() }}
       </span>
     }
   </div>
+  <!-- Punto de montaje para la instancia del editor -->
   <div #host class="editor-host"></div>
 </div>

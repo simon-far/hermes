@@ -1,3 +1,4 @@
+<!-- Vista del historial personal de traducciones del usuario -->
 <section class="historial-page">
 
   <!-- ENCABEZADO -->
@@ -22,7 +23,7 @@
 
   @if (!logueado()) {
 
-    <!-- SIN SESIÓN -->
+    <!-- SIN SESIÓN: solicita autenticación antes de mostrar el historial -->
     <div class="sin-resultados">
       <div class="sin-resultados-icon">
         <i class="fa-solid fa-lock"></i>
@@ -43,7 +44,7 @@
 
   } @else {
 
-    <!-- ESTADÍSTICAS -->
+    <!-- ESTADÍSTICAS: resumen de actividad del usuario -->
     <div class="estadisticas">
 
       <article class="stat-card">
@@ -81,7 +82,7 @@
 
     </div>
 
-    <!-- FILTROS -->
+    <!-- FILTROS: búsqueda por texto y selector de lenguaje -->
     <section class="filtros-section">
 
       <div class="filtros-heading">
@@ -124,6 +125,7 @@
       </div>
     </section>
 
+    <!-- Estados de carga, error, vacío o grilla de resultados -->
     @if (cargando()) {
 
       <div class="sin-resultados">
@@ -178,6 +180,7 @@
         @for (traduccion of traduccionesFiltradas; track traduccion.id) {
           <article class="archivo-card">
 
+            <!-- Ruta de conversión: lenguaje de origen → lenguaje de destino -->
             <div class="lenguajes-ruta">
               <span class="lenguaje-chip" [ngClass]="claseLenguaje(traduccion.lenguajeOrigen)">
                 <i [class]="iconoLenguaje(traduccion.lenguajeOrigen)"></i>
@@ -192,8 +195,10 @@
               </span>
             </div>
 
+            <!-- Extracto del código traducido -->
             <pre class="codigo-preview"><code>{{ vistaPrevia(traduccion.codigoTraducido) }}</code></pre>
 
+            <!-- Metadatos: fecha de creación y modelo de IA utilizado -->
             <div class="archivo-detalles">
               <span>
                 <i class="fa-regular fa-calendar"></i>
@@ -208,6 +213,7 @@
               }
             </div>
 
+            <!-- Acciones sobre el registro -->
             <div class="archivo-card-footer">
               <button class="btn-modificar" type="button" (click)="abrirEdicion(traduccion)">
                 <i class="fa-solid fa-pen-to-square"></i>
@@ -229,6 +235,7 @@
 
   }
 
+  <!-- Aviso de privacidad del historial -->
   <div class="historial-footer">
     <i class="fa-solid fa-shield-halved"></i>
     Tus traducciones se guardan cifradas y solo son visibles para ti.
@@ -239,6 +246,7 @@
 <!-- VENTANA: MODIFICAR TRADUCCIÓN -->
 @if (traduccionEditando()) {
   <div class="modal-backdrop-hermes" (click)="cerrarEdicion()">
+    <!-- stopPropagation evita cerrar el modal al hacer clic dentro de la tarjeta -->
     <div
       class="modal-card"
       role="dialog"
@@ -258,6 +266,7 @@
         </button>
       </div>
 
+      <!-- Formulario template-driven para editar lenguajes y fragmentos de código -->
       <form #formEditar="ngForm" (ngSubmit)="guardarCambios(formEditar)" novalidate>
 
         <div class="form-row">

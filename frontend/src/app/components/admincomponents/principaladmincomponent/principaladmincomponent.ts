@@ -6,6 +6,11 @@ import { EstadisticasService } from '../../../services/estadisticas.service';
 /** Divisiones del eje Y de la gráfica de actividad (5 marcas). */
 const DIVISIONES_EJE = 4;
 
+/**
+ * Componente principal del panel de administración.
+ * Consulta las estadísticas generales de la plataforma y deriva los indicadores,
+ * la distribución por lenguajes, la gráfica de actividad mensual y el listado reciente.
+ */
 @Component({
   selector: 'app-principaladmincomponent',
   standalone: false,
@@ -15,19 +20,25 @@ const DIVISIONES_EJE = 4;
 export class Principaladmincomponent implements OnInit {
   private readonly estadisticasService = inject(EstadisticasService);
 
+  /** Respuesta cruda de estadísticas obtenida del backend. */
   private readonly datos = signal<Estadisticas | null>(null);
+  /** Indica si la consulta inicial de estadísticas sigue en curso. */
   readonly cargando = signal(true);
+  /** Mensaje de error en caso de fallar la carga de datos. */
   readonly error = signal<string | null>(null);
 
+  /** Total acumulado de solicitudes de traducción. */
   readonly totalSolicitudes = computed(() => this.datos()?.totalTraducciones ?? 0);
 
   /** Actividad del mes en curso (último elemento de la lista mensual). */
   private readonly mesActual = computed(() => this.datos()?.actividadMensual.at(-1));
 
+  /** Distribución de lenguajes ordenados de mayor a menor demanda. */
   readonly lenguajes = computed(() =>
     this.estadisticasService.lenguajesOrdenados(this.datos()?.traduccionesPorLenguaje)
   );
 
+  /** Tarjetas de indicadores principales mostradas en el resumen superior. */
   readonly estadisticas = computed<Estadistica[]>(() => {
     const datos = this.datos();
     const mes = this.mesActual();
@@ -67,6 +78,7 @@ export class Principaladmincomponent implements OnInit {
     ];
   });
 
+  /** Serie mensual formateada para renderizar las columnas de la gráfica. */
   readonly datosGrafica = computed<DatoGrafica[]>(() =>
     (this.datos()?.actividadMensual ?? []).map((a) => ({
       periodo: this.estadisticasService.etiquetaMes(a.periodo),
@@ -83,6 +95,7 @@ export class Principaladmincomponent implements OnInit {
     )
   );
 
+  /** Etiquetas numéricas del eje Y generadas a partir del valor máximo. */
   readonly marcasGrafica = computed(() =>
     this.estadisticasService.marcasEje(this.maximoGrafica(), DIVISIONES_EJE)
   );
@@ -98,6 +111,9 @@ export class Principaladmincomponent implements OnInit {
     }))
   );
 
+  /**
+   * Inicializa el componente solicitando las estadísticas generales al servicio.
+   */
   ngOnInit(): void {
     this.estadisticasService.obtener().subscribe({
       next: (datos) => {
@@ -112,12 +128,21 @@ export class Principaladmincomponent implements OnInit {
     });
   }
 
-  // Altura de cada barra respecto al máximo del eje.
+  /**
+   * Calcula la altura porcentual de una barra respecto al máximo del eje Y.
+   * @param valor Cantidad numérica representada por la barra.
+   * @returns Altura en formato CSS porcentual (por ejemplo, `'45%'`).
+   */
   obtenerAltura(valor: number): string {
     return `${(valor / this.maximoGrafica()) * 100}%`;
   }
 
-  /** Texto relativo como 'Hace 10 minutos' o 'Hace 2 días' (fecha completa si pasó un mes). */
+  /**
+   * Formatea una fecha en texto relativo como `'Hace 10 minutos'` o `'Hace 2 días'`
+   * (muestra la fecha completa si pasó un mes).
+   * @param fecha Cadena de fecha recibida del backend o `null`.
+   * @returns Texto legible del tiempo transcurrido.
+   */
   private tiempoRelativo(fecha: string | null): string {
     const d = this.estadisticasService.aFecha(fecha);
     if (!d) return 'Sin fecha';

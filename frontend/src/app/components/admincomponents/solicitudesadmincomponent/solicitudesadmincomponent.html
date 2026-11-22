@@ -1,4 +1,5 @@
 
+<!-- Cabecera de navegación del panel administrativo -->
 <app-headeradmincomponent></app-headeradmincomponent>
 
 <main class="requests-page">
@@ -17,12 +18,13 @@
     </div>
   </section>
 
+  <!-- Alerta visible cuando falla la carga de solicitudes -->
   <div class="load-error" *ngIf="error()">
     <i class="fa-solid fa-triangle-exclamation"></i>
     {{ error() }}
   </div>
 
-  <!-- Estadísticas -->
+  <!-- Estadísticas: resumen rápido de solicitudes, actividad mensual y cobertura -->
   <section class="requests-statistics">
 
     <article class="stat-card">
@@ -67,7 +69,7 @@
 
   </section>
 
-  <!-- Listado -->
+  <!-- Listado principal de solicitudes -->
   <section class="requests-section">
 
     <div class="section-heading">
@@ -81,7 +83,7 @@
       </span>
     </div>
 
-    <!-- Búsqueda y filtros -->
+    <!-- Búsqueda por texto y filtro por lenguaje de destino -->
     <div class="requests-toolbar">
 
       <div class="search-box">
@@ -107,7 +109,7 @@
 
     </div>
 
-    <!-- Tabla -->
+    <!-- Tabla de resultados -->
     <div class="requests-table-container">
 
       <table class="requests-table">
@@ -124,6 +126,7 @@
 
         <tbody>
 
+        <!-- Filas generadas a partir de los filtros aplicados -->
         <tr *ngFor="let solicitud of solicitudesFiltradas">
 
           <td>
@@ -159,6 +162,7 @@
 
         </tr>
 
+        <!-- Estado de carga inicial -->
         <tr *ngIf="cargando()">
           <td colspan="5" class="empty-state">
             <i class="fa-solid fa-spinner fa-spin"></i>
@@ -166,6 +170,7 @@
           </td>
         </tr>
 
+        <!-- Estado vacío cuando no hay coincidencias -->
         <tr *ngIf="!cargando() && solicitudesFiltradas.length === 0">
           <td colspan="5" class="empty-state">
             <i class="fa-solid fa-folder-open"></i>
