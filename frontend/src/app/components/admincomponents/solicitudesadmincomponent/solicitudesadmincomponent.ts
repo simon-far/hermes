@@ -1,5 +1,7 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Solicitud } from '../../../models/solicitud.model';
+import { Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subscription } from 'rxjs';
+import { Solicitud, SolicitudDetalle } from '../../../models/solicitud.model';
 import { EstadisticasService } from '../../../services/estadisticas.service';
 
 @Component({
@@ -19,6 +21,16 @@ export class Solicitudesadmincomponent implements OnInit {
   readonly solicitudes = signal<Solicitud[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+
+  // Ventana de detalle
+  /** Solicitud cuya ventana de detalle está abierta (null = cerrada). */
+  readonly solicitudSeleccionada = signal<Solicitud | null>(null);
+  /** Detalle completo (código y mejoras) cargado desde el backend. */
+  readonly detalle = signal<SolicitudDetalle | null>(null);
+  readonly cargandoDetalle = signal(false);
+  readonly errorDetalle = signal<string | null>(null);
+  /** Petición de detalle en curso; se cancela si se cierra o se abre otra solicitud. */
+  private peticionDetalle?: Subscription;
 
   readonly totalMesActual = computed(
     () => this.solicitudes().filter((s) => this.esDelMesActual(s.fecha)).length
@@ -72,6 +84,52 @@ export class Solicitudesadmincomponent implements OnInit {
   /** Fecha en formato dd/mm/aaaa para la tabla. */
   formatearFecha(fecha: string | null): string {
     return this.estadisticasService.formatearFecha(fecha);
+  }
+
+  /** Fecha con hora para la ventana de detalle. */
+  formatearFechaHora(fecha: string | null): string {
+    return this.estadisticasService.formatearFechaHora(fecha);
+  }
+
+  // ---------- Detalle ----------
+
+  /**
+   * Abre la ventana de detalle: muestra de inmediato los datos de la fila y
+   * pide al backend el código original, el traducido y las mejoras.
+   * @param solicitud Solicitud seleccionada en la tabla.
+   */
+  verDetalle(solicitud: Solicitud): void {
+    this.peticionDetalle?.unsubscribe();
+    this.solicitudSeleccionada.set(solicitud);
+    this.detalle.set(null);
+    this.errorDetalle.set(null);
+    this.cargandoDetalle.set(true);
+
+    this.peticionDetalle = this.estadisticasService.detalleSolicitud(solicitud.id).subscribe({
+      next: (detalle) => {
+        this.detalle.set(detalle);
+        this.cargandoDetalle.set(false);
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Error al consultar el detalle de la solicitud:', error);
+        this.errorDetalle.set(
+          error.status === 404
+            ? 'Esta solicitud ya no existe; es posible que el usuario la haya eliminado.'
+            : this.estadisticasService.mensajeErrorCarga(error)
+        );
+        this.cargandoDetalle.set(false);
+      },
+    });
+  }
+
+  /** Cierra la ventana de detalle y cancela la petición pendiente. */
+  @HostListener('document:keydown.escape')
+  cerrarDetalle(): void {
+    this.peticionDetalle?.unsubscribe();
+    this.solicitudSeleccionada.set(null);
+    this.detalle.set(null);
+    this.errorDetalle.set(null);
+    this.cargandoDetalle.set(false);
   }
 
   private lenguajeDestino(solicitud: Solicitud): string {

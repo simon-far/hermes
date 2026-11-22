@@ -11,6 +11,9 @@ import {Reportesadmincomponent} from './components/admincomponents/reportesadmin
 import {LoginService} from './services/login.service';
 
 const routes: Routes = [
+  // Al entrar a la página (ruta raíz) se muestra directamente el traductor.
+  {path: '', redirectTo: 'usuario/traductor', pathMatch: 'full'},
+
   {
     path: 'usuario',
     children: [{path: '', redirectTo: 'traductor', pathMatch: 'full'},
@@ -29,7 +32,11 @@ const routes: Routes = [
       {path: 'solicitudes', component: Solicitudesadmincomponent},
       {path: 'reportes', component: Reportesadmincomponent},
     ]
-  }
+  },
+
+  // Cualquier dirección que no exista lleva al traductor en lugar de mostrar la página vacía.
+  // Debe ir siempre al final: Angular revisa las rutas en orden.
+  {path: '**', redirectTo: 'usuario/traductor'}
 ];
 
 @NgModule({

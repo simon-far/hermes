@@ -154,7 +154,7 @@
           </td>
 
           <td>
-            <button class="view-button" type="button">
+            <button class="view-button" type="button" (click)="verDetalle(solicitud)">
               Ver detalle
               <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -188,3 +188,88 @@
   </section>
 
 </main>
+
+<!-- Modal: detalle completo de la solicitud seleccionada -->
+@if (solicitudSeleccionada(); as solicitud) {
+<div class="modal-backdrop-hermes" (click)="cerrarDetalle()">
+  <!-- stopPropagation evita cerrar el modal al hacer clic dentro de la tarjeta -->
+  <div
+    class="modal-card modal-detalle"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-detalle-solicitud"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="modal-header-hermes">
+      <div>
+        <span class="section-eyebrow">SOLICITUD #{{ solicitud.id }}</span>
+        <h2 id="titulo-detalle-solicitud">{{ textoLenguajes(solicitud) }}</h2>
+      </div>
+      <button type="button" class="close-button" aria-label="Cerrar" (click)="cerrarDetalle()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Datos generales: disponibles de inmediato desde la fila de la tabla -->
+    <dl class="detalle-datos">
+      <div>
+        <dt>Usuario</dt>
+        <dd>{{ solicitud.usuario || 'Sin datos' }}</dd>
+      </div>
+      <div>
+        <dt>Correo</dt>
+        <dd>{{ solicitud.correo || 'Sin datos' }}</dd>
+      </div>
+      <div>
+        <dt>Modelo de IA</dt>
+        <dd>{{ solicitud.modelo || 'Sin especificar' }}</dd>
+      </div>
+      <div>
+        <dt>Fecha</dt>
+        <dd>{{ formatearFechaHora(solicitud.fecha) }}</dd>
+      </div>
+    </dl>
+
+    <!-- Código y mejoras: se cargan desde el backend al abrir el modal -->
+    @if (cargandoDetalle()) {
+      <p class="detalle-estado">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+        Cargando el código de la solicitud...
+      </p>
+    } @else if (errorDetalle()) {
+      <p class="detalle-estado detalle-error">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        {{ errorDetalle() }}
+      </p>
+    } @else if (detalle(); as d) {
+      <div class="detalle-codigos">
+        <section>
+          <h3>Código original <span>{{ d.lenguajeOrigen || 'Sin especificar' }}</span></h3>
+          <pre class="detalle-codigo">{{ d.codigoOriginal || 'Sin código' }}</pre>
+        </section>
+        <section>
+          <h3>Código traducido <span>{{ d.lenguajeDestino || 'Sin especificar' }}</span></h3>
+          <pre class="detalle-codigo">{{ d.codigoTraducido || 'Sin código' }}</pre>
+        </section>
+      </div>
+
+      <section class="detalle-mejoras">
+        <h3>Mejoras sugeridas por la IA</h3>
+        @if (d.mejoras.length) {
+          <ul>
+            @for (mejora of d.mejoras; track $index) {
+              <li>{{ mejora }}</li>
+            }
+          </ul>
+        } @else {
+          <p class="modal-text">La IA no sugirió mejoras para esta solicitud.</p>
+        }
+      </section>
+    }
+
+    <div class="modal-actions">
+      <button type="button" class="secondary-action" (click)="cerrarDetalle()">Cerrar</button>
+    </div>
+  </div>
+</div>
+}
