@@ -6,6 +6,8 @@
 ## Integrantes
 
 | Nombre | Correo |
+
+| Cesar cardenas| cdcardenasp@unbosque.edu.co|
 | Julio Rondón | jrondonc@unbosque.edu.co |
 | Kevin Puentes | Kpuentess@unbosque.edu.co |
 | Nicolás Alberto Mahecha | nmahechaa@unbosque.edu.co |
