@@ -23,7 +23,7 @@ export class LoginService {
   private readonly cliente = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
-  private readonly urlbase = 'https://gpcueb.org/hermes';
+  private readonly urlbase = 'https://gpcueb.org/hermesbackend';
 
   /**
    * Construye las cabeceras HTTP con el encabezado `Authorization: Bearer <token>`

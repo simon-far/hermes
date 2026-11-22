@@ -12,7 +12,7 @@ import { LoginService } from './login.service';
 export class TraduccionService {
   private readonly cliente = inject(HttpClient);
   private readonly loginServicio = inject(LoginService);
-  private readonly urlbase = 'https://gpcueb.org/hermes';
+  private readonly urlbase = 'https://gpcueb.org/hermesbackend';
 
   /**
    * Obtiene las cabeceras de autorización (`Authorization: Bearer <token>`)
