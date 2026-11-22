@@ -31,7 +31,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = { "http://localhost:4200", "http://localhost:4201" })
+@CrossOrigin(origins = { "https://hermestranslator.netlify.app", "http://localhost:4200", "http://localhost:4201" })
 @Transactional
 @Tag(name = "Gestión de Usuarios", description = "Endpoints para administrar usuarios")
 @SecurityRequirement(name = "bearerAuth")

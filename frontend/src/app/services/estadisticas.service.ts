@@ -21,7 +21,7 @@ const MAX_LENGUAJES = 5;
 export class EstadisticasService {
   private readonly cliente = inject(HttpClient);
   private readonly loginServicio = inject(LoginService);
-  private readonly urlbase = 'http://localhost:8080/estadisticas';
+  private readonly urlbase = 'https://gpcueb.org/hermes/estadisticas';
 
   // ---------- Peticiones al backend ----------
 
