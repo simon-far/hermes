@@ -14,7 +14,7 @@ import { LoginService } from './login.service';
 export class UsuarioService {
   private readonly cliente = inject(HttpClient);
   private readonly loginServicio = inject(LoginService);
-  private readonly urlbase = 'https://gpcueb.org/hermes';
+  private readonly urlbase = 'https://gpcueb.org/hermesbackend';
 
   /**
    * Obtiene el listado completo de usuarios registrados en la plataforma.
