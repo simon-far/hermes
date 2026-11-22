@@ -40,7 +40,7 @@ public class ApiController {
 	ResponseEntity<TraduccionDTO> traduccionNemotron(@RequestBody TraduccionRequestDTO req,
 			@AuthenticationPrincipal Usuario user) {
 		RespuestaIADTO respuesta = ExternalHTTPRequestHandler.traducir(req, ExternalHTTPRequestHandler.NEMOTRON_URL,
-				ExternalHTTPRequestHandler.NEMOTRON_MODEL, ExternalHTTPRequestHandler.getApiKey());
+				ExternalHTTPRequestHandler.NEMOTRON_MODEL, ExternalHTTPRequestHandler.getApiKeyNemotron());
 		return new ResponseEntity<TraduccionDTO>(
 				guardarTraduccion(req, user, ExternalHTTPRequestHandler.NEMOTRON_MODEL, respuesta),
 				HttpStatus.ACCEPTED);

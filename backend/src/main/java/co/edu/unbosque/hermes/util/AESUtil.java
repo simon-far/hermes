@@ -19,6 +19,8 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Utilidad criptografica para el cifrado y el descifrdo simétrico de datos
@@ -29,8 +31,27 @@ import org.apache.commons.codec.digest.DigestUtils;
  * Incluye soperte de IVs derivados dinamicamente mediante el HMAC_SHA254 o
  * previstos de forma manual.
  *</p>
+ * <p>
+ * La llave se lee de la propiedad {@code AES_KEY} (en {@code application.properties}
+ * o como variable de entorno, que tiene prioridad). Es un {@link Component} solo
+ * para que Spring inyecte la llave al arrancar; sus métodos siguen siendo estáticos.
+ * </p>
  */
+@Component
 public class AESUtil {
+
+	/** Llave AES inyectada por Spring desde la propiedad {@code AES_KEY}. */
+	private static String llaveAes;
+
+	/**
+	 * Recibe la llave AES desde la configuración al arrancar la aplicación.
+	 *
+	 * @param llave Valor de la propiedad {@code AES_KEY}.
+	 */
+	@Value("${AES_KEY}")
+	public void setLlaveAes(String llave) {
+		AESUtil.llaveAes = llave;
+	}
 
 	/** Algoritmo de cifrado simétrico base. */
 	private final static String ALGORITMO = "AES";
@@ -118,31 +139,30 @@ public class AESUtil {
 	private final static int LARGO_TAG = 16;
 
 	/**
-	 * Lee y valida una variable de entorno que contiene la llave criptográfica.
-	 * 
-	 * @param nombre        Nombre de la variable de entorno.
+	 * Devuelve la llave AES inyectada por Spring y valida su longitud.
+	 *
 	 * @param largosValidos Longitudes válidas permitidas en bytes (ej. 16, 24, 32).
 	 * @return La llave en formato de cadena si es válida.
-	 * @throws IllegalStateException si la variable no existe, está vacía o su
-	 *                               longitud es incorrecta.
+	 * @throws IllegalStateException si la llave no está configurada, está vacía o
+	 *                               su longitud es incorrecta.
 	 */
-	private static String leerVariable(String nombre, int... largosValidos) {
-		String valor = System.getenv(nombre);
+	private static String leerLlave(int... largosValidos) {
+		String valor = llaveAes;
 		if (valor == null || valor.isBlank()) {
-			throw new IllegalStateException("Falta la variable de entorno " + nombre);
+			throw new IllegalStateException("Falta la llave AES_KEY en application.properties o como variable de entorno");
 		}
 		for (int largo : largosValidos) {
 			if (valor.getBytes().length == largo) {
 				return valor;
 			}
 		}
-		throw new IllegalStateException("La variable de entorno " + nombre + " tiene " + valor.getBytes().length
-				+ " bytes; debe tener " + java.util.Arrays.toString(largosValidos));
+		throw new IllegalStateException("La llave AES_KEY tiene " + valor.getBytes().length + " bytes; debe tener "
+				+ java.util.Arrays.toString(largosValidos));
 	}
 
 	/**
-	 * Cifra un texto plano con AES/GCM utilizando la llave obtenida de la variable
-	 * de entorno {@code AES_KEY}.
+	 * Cifra un texto plano con AES/GCM utilizando la llave configurada en
+	 * {@code AES_KEY}.
 	 * <p>
 	 * El IV no es fijo: se calcula como los primeros 12 bytes de HMAC-SHA256(llave,
 	 * texto) y se antepone al resultado. El formato de salida final es Base64(iv +
@@ -155,7 +175,7 @@ public class AESUtil {
 	 *                               cifrado o falta la llave.
 	 */
 	public static String encrypt(String plainText) {
-		String key = leerVariable("AES_KEY", 16, 24, 32);
+		String key = leerLlave(16, 24, 32);
 		try {
 			byte[] texto = plainText.getBytes(StandardCharsets.UTF_8);
 			byte[] iv = Arrays.copyOf(hmacSha256(key, texto), LARGO_IV);
@@ -186,7 +206,7 @@ public class AESUtil {
 	 * @return El texto plano original, o {@code ""} si el descifrado falla.
 	 */
 	public static String decrypt(String encrypted) {
-		String key = leerVariable("AES_KEY", 16, 24, 32);
+		String key = leerLlave(16, 24, 32);
 		byte[] todo = decodeBase64(encrypted);
 		if (todo.length < LARGO_IV + LARGO_TAG) {
 			return "";
@@ -273,31 +293,6 @@ public class AESUtil {
 	 */
 	public static String hashingToSHA512(String content) {
 		return DigestUtils.sha512Hex(content);
-	}
-
-	/**
-	 * Método principal de prueba y demostración de las funciones de cifrado,
-	 * descifrado y hashing.
-	 * 
-	 * @param args Argumentos de la línea de comandos.
-	 */
-	public static void main(String[] args) {
-		String text = "sapohijodeperra";
-		System.out.println(text);
-
-		String encoded = encrypt(text);
-		System.out.println(encoded);
-
-		String decoded = decrypt(encoded);
-		System.out.println(decoded);
-
-		String contrasena = "soyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseñasoyunacontraseña";
-		System.out.println(hashingToMD5(contrasena));
-		System.out.println(hashingToSHA1(contrasena));
-		System.out.println(hashingToSHA256(contrasena));
-		System.out.println(hashingToSHA384(contrasena));
-		System.out.println(hashingToSHA512(contrasena));
-
 	}
 
 }

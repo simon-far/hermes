@@ -25,7 +25,9 @@ import com.google.gson.JsonParser;
 
 import co.edu.unbosque.hermes.dto.ChatResponseDTO;
 import co.edu.unbosque.hermes.dto.RespuestaIADTO;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Component;
 
 import co.edu.unbosque.hermes.dto.TraduccionRequestDTO;
 import co.edu.unbosque.hermes.exception.IAServiceException;
@@ -39,7 +41,14 @@ import co.edu.unbosque.hermes.exception.IAServiceException;
  * de código, el formateo de JSON y el procesamiento de respuestas estructuradas
  * devueltas por los modelos de lenguaje (Cohere, Nemotron, Particle).
  * </p>
+ * <p>
+ * Las llaves de OpenRouter se leen de {@code application.properties} (o de
+ * variables de entorno con el mismo nombre, que tienen prioridad). Es un
+ * {@link Component} solo para que Spring inyecte las llaves al arrancar; sus
+ * métodos siguen siendo estáticos.
+ * </p>
  */
+@Component
 public class ExternalHTTPRequestHandler {
 
 	/**
@@ -69,21 +78,52 @@ public class ExternalHTTPRequestHandler {
 	public static final String PARTICLE_MODEL = "particle-ai/particle-1:free";
 
 	/**
-	 * Llave de API para Cohere obtenida de la variable de entorno correspondiente.
+	 * Llave de API para Cohere. Spring la asigna al arrancar desde la propiedad
+	 * {@code OPENROUTER_API_KEY_COHERE_MINI_CODE}.
 	 */
-	private static final String API_KEY_COHERE = System.getenv("OPENROUTER_API_KEY_COHERE_MINI_CODE");
+	private static String API_KEY_COHERE;
 
 	/**
-	 * Llave de API para Nemotron obtenida de la variable de entorno
-	 * correspondiente.
+	 * Llave de API para Nemotron. Spring la asigna al arrancar desde la propiedad
+	 * {@code OPENROUTER_API_KEY_NVIDIA_NEMOTRON}.
 	 */
-	private static final String API_KEY_NEMOTRON = System.getenv("OPENROUTER_API_KEY_NVIDIA_NEMOTRON");
+	private static String API_KEY_NEMOTRON;
 
 	/**
-	 * Llave de API para Particle obtenida de la variable de entorno
-	 * correspondiente.
+	 * Llave de API para Particle. Spring la asigna al arrancar desde la propiedad
+	 * {@code OPENROUTER_API_KEY_PARTICLE}.
 	 */
-	private static final String API_KEY_PARTICLE = System.getenv("OPENROUTER_API_KEY_PARTICLE");
+	private static String API_KEY_PARTICLE;
+
+	/**
+	 * Recibe la llave de Cohere desde la configuración al arrancar la aplicación.
+	 *
+	 * @param llave Valor de la propiedad {@code OPENROUTER_API_KEY_COHERE_MINI_CODE}.
+	 */
+	@Value("${OPENROUTER_API_KEY_COHERE_MINI_CODE}")
+	public void setApiKeyCohere(String llave) {
+		API_KEY_COHERE = llave;
+	}
+
+	/**
+	 * Recibe la llave de Nemotron desde la configuración al arrancar la aplicación.
+	 *
+	 * @param llave Valor de la propiedad {@code OPENROUTER_API_KEY_NVIDIA_NEMOTRON}.
+	 */
+	@Value("${OPENROUTER_API_KEY_NVIDIA_NEMOTRON}")
+	public void setApiKeyNemotron(String llave) {
+		API_KEY_NEMOTRON = llave;
+	}
+
+	/**
+	 * Recibe la llave de Particle desde la configuración al arrancar la aplicación.
+	 *
+	 * @param llave Valor de la propiedad {@code OPENROUTER_API_KEY_PARTICLE}.
+	 */
+	@Value("${OPENROUTER_API_KEY_PARTICLE}")
+	public void setApiKeyParticle(String llave) {
+		API_KEY_PARTICLE = llave;
+	}
 
 	/**
 	 * Obtiene la llave de API configurada para el servicio de Cohere.
@@ -135,61 +175,6 @@ public class ExternalHTTPRequestHandler {
 			- "codigo" es un string: escapa los saltos de línea como \\n y las comillas como \\".
 			- "mejoras" es una lista breve (máximo 6) de frases en español.
 			""";
-
-	/**
-	 * Método principal de prueba para verificar la comunicación y el consumo de las
-	 * APIs de IA.
-	 * 
-	 * @param args Argumentos de la línea de comandos.
-	 * @throws IOException          Si ocurre un error de E/S.
-	 * @throws InterruptedException Si la ejecución es interrumpida.
-	 */
-	public static void main(String[] args) throws IOException, InterruptedException {
-		System.out.println("//// POST COHERE ////");
-		if (API_KEY_COHERE == null || API_KEY_COHERE.isBlank()) {
-			System.out.println("Falta la variable de entorno OPENROUTER_API_KEY_COHERE_MINI_CODE");
-			return;
-		}
-		TraduccionRequestDTO req = new TraduccionRequestDTO("print('hola mundo')", "python", "java");
-		String json = crearBodyTraduccion(req);
-
-		ChatResponseDTO resp = doPostAndConvertToDto(COHERE_URL, json);
-		System.out.println(resp.toString());
-
-		if (resp.getStatuscode() == 200 && resp.getPrimerContenido() != null) {
-			System.out.println(parsearRespuesta(resp.getPrimerContenido()));
-		} else {
-			System.out.println("La API respondió con status code -> " + resp.getStatuscode());
-		}
-
-		System.out.println("//// POST NEMOTRON ////");
-		if (API_KEY_NEMOTRON == null || API_KEY_NEMOTRON.isBlank()) {
-			System.out.println("Falta la variable de entorno OPENROUTER_API_KEY_NEMOTRON");
-			return;
-		}
-		String jsonNemotron = crearBodyTraduccion(req, NEMOTRON_MODEL);
-		ChatResponseDTO respNemotron = doPostAndConvertToDto(NEMOTRON_URL, jsonNemotron, API_KEY_NEMOTRON);
-		System.out.println(respNemotron.toString());
-		if (respNemotron.getStatuscode() == 200 && respNemotron.getPrimerContenido() != null) {
-			System.out.println(parsearRespuesta(respNemotron.getPrimerContenido()));
-		} else {
-			System.out.println("La API respondió con status code -> " + respNemotron.getStatuscode());
-		}
-		System.out.println("//// POST PARTICLE ////");
-		if (API_KEY_PARTICLE == null || API_KEY_PARTICLE.isBlank()) {
-			System.out.println("Falta la variable de entorno OPENROUTER_API_KEY_PARTICLE");
-			return;
-		}
-		String jsonParticle = crearBodyTraduccion(req, PARTICLE_MODEL);
-		ChatResponseDTO respParticle = doPostAndConvertToDto(PARTICLE_URL, jsonParticle, API_KEY_PARTICLE);
-		System.out.println(respParticle.toString());
-		if (respParticle.getStatuscode() == 200 && respParticle.getPrimerContenido() != null) {
-			System.out.println(parsearRespuesta(respParticle.getPrimerContenido()));
-		} else {
-			System.out.println("La API respondió con status code -> " + respParticle.getStatuscode());
-		}
-
-	}
 
 	/**
 	 * Envía una petición POST utilizando por defecto la API Key de Cohere y
